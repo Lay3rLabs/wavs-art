@@ -49,15 +49,15 @@ contract DeployScript is Common {
         string memory _json = "json";
         _json.serialize(
             "reward_distributor",
-            Strings.toHexString(address(rewardDistributor))
+            Strings.toChecksumHexString(address(rewardDistributor))
         );
         _json.serialize(
             "reward_token",
-            Strings.toHexString(address(rewardERC20))
+            Strings.toChecksumHexString(address(rewardERC20))
         );
         string memory _finalJson = _json.serialize(
             "reward_source_nft",
-            Strings.toHexString(address(rewardSourceERC721))
+            Strings.toChecksumHexString(address(rewardSourceERC721))
         );
         vm.writeFile(script_output_path, _finalJson);
     }

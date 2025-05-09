@@ -16,6 +16,7 @@ sh ./build_service.sh
 - TRIGGER_EVENT: The event to trigger the service (e.g. "NewTrigger(bytes)")
 - FUEL_LIMIT: The fuel limit (wasm compute metering) for the service
 - MAX_GAS: The maximum chain gas for the submission Tx
+- ENV_VARS: The environment variables to set for the service, comma separated
 '''
 
 # == Defaults ==
@@ -23,13 +24,14 @@ sh ./build_service.sh
 FUEL_LIMIT=${FUEL_LIMIT:-1000000000000}
 MAX_GAS=${MAX_GAS:-5000000}
 FILE_LOCATION=${FILE_LOCATION:-".docker/service.json"}
-COMPONENT_FILENAME=${COMPONENT_FILENAME:-"evm_price_oracle.wasm"}
-TRIGGER_EVENT=${TRIGGER_EVENT:-"NewTrigger(bytes)"}
+COMPONENT_FILENAME=${COMPONENT_FILENAME:-"rewards.wasm"}
+TRIGGER_EVENT=${TRIGGER_EVENT:-"WavsRewardsTrigger(uint64,address,address)"}
 TRIGGER_CHAIN=${TRIGGER_CHAIN:-"local"}
 SUBMIT_CHAIN=${SUBMIT_CHAIN:-"local"}
-AGGREGATOR_URL=${AGGREGATOR_URL:-""}
+AGGREGATOR_URL=${AGGREGATOR_URL:-"http://127.0.0.1:8001"}
 # used in make upload-component
 WAVS_ENDPOINT=${WAVS_ENDPOINT:-"http://localhost:8000"}
+ENV_VARS=${ENV_VARS:-"WAVS_ENV_REWARD_TOKEN_ADDRESS,WAVS_ENV_REWARD_SOURCE_NFT_ADDRESS,WAVS_ENV_PINATA_API_URL,WAVS_ENV_PINATA_API_KEY"}
 export DOCKER_DEFAULT_PLATFORM=linux/amd64
 
 BASE_CMD="docker run --rm --network host -w /data -v $(pwd):/data ghcr.io/lay3rlabs/wavs:0.4.0-beta.1 wavs-cli service --json true --home /data --file /data/${FILE_LOCATION}"
@@ -58,7 +60,6 @@ TRIGGER_EVENT_HASH=`cast keccak ${TRIGGER_EVENT}`
 SERVICE_ID=`$BASE_CMD init --name demo | jq -r .id`
 echo "Service ID: ${SERVICE_ID}"
 
-
 WORKFLOW_ID=`$BASE_CMD workflow add | jq -r '.workflows | keys | .[0]'`
 echo "Workflow ID: ${WORKFLOW_ID}"
 
@@ -74,9 +75,10 @@ $BASE_CMD workflow submit --id ${WORKFLOW_ID} ${SUB_CMD} --address ${SUBMIT_ADDR
 COMPONENT_ID=`$BASE_CMD workflow component --id ${WORKFLOW_ID} set-source-digest --digest ${WASM_DIGEST} | jq -r '.workflows | keys | .[0]'`
 echo "Component ID: ${COMPONENT_ID}"
 
+# set env
 $BASE_CMD workflow component --id ${COMPONENT_ID} permissions --http-hosts '*' --file-system true > /dev/null
 $BASE_CMD workflow component --id ${COMPONENT_ID} time-limit --seconds 30 > /dev/null
-$BASE_CMD workflow component --id ${COMPONENT_ID} env --values WAVS_ENV_SOME_SECRET > /dev/null
+$BASE_CMD workflow component --id ${COMPONENT_ID} env --values ${ENV_VARS} > /dev/null
 $BASE_CMD workflow component --id ${COMPONENT_ID} config --values 'key=value,key2=value2' > /dev/null
 
 $BASE_CMD manager set-evm --chain-name ${SUBMIT_CHAIN} --address `cast --to-checksum ${SERVICE_MANAGER_ADDRESS}`
