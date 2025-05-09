@@ -26,14 +26,8 @@ interface ITypes {
     /**
      * @notice Event emitted when a new trigger is created
      * @param triggerId Unique identifier for the trigger
-     * @param rewardTokenAddr Address of the reward token
-     * @param rewardSourceNftAddr Address of the reward source NFT
      */
-    event WavsRewardsTrigger(
-        uint64 triggerId,
-        address rewardTokenAddr,
-        address rewardSourceNftAddr
-    );
+    event WavsRewardsTrigger(uint64 triggerId);
 
     /**
      * @notice Struct to store trigger information

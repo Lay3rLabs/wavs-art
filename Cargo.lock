@@ -845,6 +845,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "autonomous-artist-simple-relay"
+version = "0.4.0-beta.1"
+dependencies = [
+ "alloy-sol-macro",
+ "alloy-sol-types",
+ "anyhow",
+ "base64 0.22.1",
+ "ethabi",
+ "hex",
+ "mockall",
+ "primitive-types 0.13.1",
+ "serde",
+ "serde_json",
+ "wavs-wasi-utils",
+ "wit-bindgen-rt",
+ "wstd",
+]
+
+[[package]]
 name = "backtrace"
 version = "0.3.74"
 source = "registry+https://github.com/rust-lang/crates.io-index"

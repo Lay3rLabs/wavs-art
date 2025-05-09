@@ -4,7 +4,7 @@ mod merkle;
 mod sources;
 mod trigger;
 
-use crate::bindings::{export, Guest, TriggerAction};
+use crate::bindings::{export, host::config_var, Guest, TriggerAction};
 use crate::sources::SourceRegistry;
 use bindings::WasmResponse;
 use merkle::get_merkle_tree;
@@ -21,17 +21,16 @@ export!(Component with_types_in bindings);
 
 impl Guest for Component {
     fn run(action: TriggerAction) -> std::result::Result<Option<WasmResponse>, String> {
-        // let reward_token_address = std::env::var("WAVS_ENV_REWARD_TOKEN_ADDRESS")
-        //     .map_err(|e| format!("Failed to get reward token address: {}", e))?;
-        // let reward_source_nft_address = std::env::var("WAVS_ENV_REWARD_SOURCE_NFT_ADDRESS")
-        //     .map_err(|e| format!("Failed to get NFT address: {}", e))?;
+        let reward_token_address =
+            config_var("reward_token").ok_or_else(|| "Failed to get reward token address")?;
+        let reward_source_nft_address =
+            config_var("nft").ok_or_else(|| "Failed to get NFT address")?;
         let ipfs_url = std::env::var("WAVS_ENV_PINATA_API_URL")
             .unwrap_or_else(|_| "https://uploads.pinata.cloud/v3/files".to_string());
         let ipfs_api_key = std::env::var("WAVS_ENV_PINATA_API_KEY")
             .map_err(|e| format!("Failed to get API key: {}", e))?;
 
-        let (trigger_id, reward_token_address, reward_source_nft_address) =
-            decode_trigger_event(action.data).map_err(|e| e.to_string())?;
+        let trigger_id = decode_trigger_event(action.data).map_err(|e| e.to_string())?;
 
         let mut registry = SourceRegistry::new();
         // Provide 1e18 rewards per NFT held.

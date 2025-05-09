@@ -19,13 +19,8 @@ interface ISimpleTrigger is ITypes {
     //////////////////////////////////////////////////////////////*/
     /**
      * @notice Add a new trigger
-     * @param rewardTokenAddr The address of the reward token
-     * @param rewardSourceNftAddr The address of the reward source NFT
      */
-    function addTrigger(
-        address rewardTokenAddr,
-        address rewardSourceNftAddr
-    ) external;
+    function addTrigger() external;
 
     /**
      * @notice Get a single trigger by triggerId

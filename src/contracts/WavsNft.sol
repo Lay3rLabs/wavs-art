@@ -34,6 +34,16 @@ contract WavsNft is
     uint256 public updateFee = 0.01 ether;
     address public fundsRecipient;
 
+    // Structure to hold metadata about the trigger
+    struct UpdateReceipt {
+        address updater;
+        bool fulfilled;
+        uint256 updateFee;
+    }
+
+    // Mapping to store additional metadata for each trigger
+    mapping(IWavsNftServiceTypes.TriggerId => UpdateReceipt) public receipts;
+
     constructor(
         address serviceManager_,
         address fundsRecipient_
@@ -111,6 +121,25 @@ contract WavsNft is
 
             // Update the tokenURI
             _setTokenURI(updateResult.tokenId, updateResult.tokenURI);
+
+            // Check if the trigger exists and is not already fulfilled
+            require(
+                receipts[updateResult.triggerId].updater != address(0),
+                "Trigger does not exist"
+            );
+            require(
+                !receipts[updateResult.triggerId].fulfilled,
+                "Trigger already fulfilled"
+            );
+
+            // Mark the trigger as fulfilled
+            receipts[updateResult.triggerId].fulfilled = true;
+
+            // Send the update fee to the funds recipient
+            (bool success, ) = payable(fundsRecipient).call{
+                value: receipts[updateResult.triggerId].updateFee
+            }("");
+            require(success, "Failed to send update fee to funds recipient");
 
             // Emit event to notify that the NFT has been updated
             emit IWavsNftServiceTypes.WavsNftUpdate(
@@ -221,6 +250,13 @@ contract WavsNft is
             IWavsNftServiceTypes.TriggerId.unwrap(nextTriggerId) + 1
         );
 
+        // Store metadata for this update request
+        receipts[nextTriggerId] = UpdateReceipt({
+            updater: msg.sender,
+            fulfilled: false,
+            updateFee: updateFee
+        });
+
         // Emit trigger event
         emit IWavsNftServiceTypes.WavsNftTrigger(
             msg.sender,
@@ -229,5 +265,16 @@ contract WavsNft is
             uint8(IWavsNftServiceTypes.WavsTriggerType.UPDATE),
             tokenId
         );
+    }
+
+    function getAllOwners() external view returns (address[] memory) {
+        uint256 totalSupply = totalSupply();
+        address[] memory owners = new address[](totalSupply);
+
+        for (uint256 i = 0; i < totalSupply; i++) {
+            owners[i] = ownerOf(tokenByIndex(i));
+        }
+
+        return owners;
     }
 }

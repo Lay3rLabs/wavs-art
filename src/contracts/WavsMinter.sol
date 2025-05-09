@@ -24,12 +24,16 @@ contract WavsMinter is Ownable, ReentrancyGuard, IWavsServiceHandler {
     // Auto-incrementing trigger ID counter
     IWavsNftServiceTypes.TriggerId public nextTriggerId;
 
+    // Address of the funds recipient
+    address public fundsRecipient;
+
     // Structure to hold metadata about the trigger
     struct Receipt {
         address creator;
         string prompt;
         IWavsNftServiceTypes.WavsTriggerType wavsTriggerType;
         bool fulfilled;
+        uint256 mintPrice;
     }
 
     // Event emitted when a mint/update is triggered
@@ -47,15 +51,20 @@ contract WavsMinter is Ownable, ReentrancyGuard, IWavsServiceHandler {
     // Event emitted when mint price is updated
     event MintPriceUpdated(uint256 newPrice);
 
-    // Event emitted when fees are withdrawn
-    event FeesWithdrawn(address indexed owner, uint256 amount);
-
-    constructor(address _serviceManager) Ownable(msg.sender) {
+    constructor(
+        address _serviceManager,
+        address _fundsRecipient
+    ) Ownable(msg.sender) {
         require(
             _serviceManager != address(0),
             "Invalid service manager address"
         );
+        require(
+            _fundsRecipient != address(0),
+            "Invalid funds recipient address"
+        );
         serviceManager = IWavsServiceManager(_serviceManager);
+        fundsRecipient = _fundsRecipient;
     }
 
     /**
@@ -77,14 +86,6 @@ contract WavsMinter is Ownable, ReentrancyGuard, IWavsServiceHandler {
             IWavsNftServiceTypes.TriggerId.unwrap(nextTriggerId) + 1
         );
 
-        // Store metadata for this mint request
-        receipts[triggerId] = Receipt({
-            creator: msg.sender,
-            prompt: prompt,
-            wavsTriggerType: IWavsNftServiceTypes.WavsTriggerType.MINT,
-            fulfilled: false
-        });
-
         // Refund any excess payment
         uint256 excess = msg.value - mintPrice;
         if (excess > 0) {
@@ -93,6 +94,15 @@ contract WavsMinter is Ownable, ReentrancyGuard, IWavsServiceHandler {
             );
             require(refundSuccess, "Failed to refund excess");
         }
+
+        // Store metadata for this mint request
+        receipts[triggerId] = Receipt({
+            creator: msg.sender,
+            prompt: prompt,
+            wavsTriggerType: IWavsNftServiceTypes.WavsTriggerType.MINT,
+            fulfilled: false,
+            mintPrice: mintPrice
+        });
 
         // Emit the WavsNftTrigger event
         emit WavsNftTrigger(
@@ -128,6 +138,12 @@ contract WavsMinter is Ownable, ReentrancyGuard, IWavsServiceHandler {
         // Mark the trigger as fulfilled
         receipts[triggerId].fulfilled = true;
 
+        // Send the mint price to the funds recipient
+        (bool success, ) = payable(fundsRecipient).call{
+            value: receipts[triggerId].mintPrice
+        }("");
+        require(success, "Failed to send mint price to funds recipient");
+
         // Emit the fulfillment event
         emit MintFulfilled(triggerId);
     }
@@ -142,16 +158,12 @@ contract WavsMinter is Ownable, ReentrancyGuard, IWavsServiceHandler {
     }
 
     /**
-     * @notice Withdraw collected fees (owner only)
+     * @notice Sets the address that receives mint fees
+     * @param newRecipient The new funds recipient address
      */
-    function withdrawFees() external onlyOwner nonReentrant {
-        uint256 balance = address(this).balance;
-        require(balance > 0, "No balance to withdraw");
-
-        (bool success, ) = payable(msg.sender).call{value: balance}("");
-        require(success, "Transfer failed");
-
-        emit FeesWithdrawn(msg.sender, balance);
+    function setFundsRecipient(address newRecipient) external onlyOwner {
+        require(newRecipient != address(0), "Invalid funds recipient");
+        fundsRecipient = newRecipient;
     }
 
     /**

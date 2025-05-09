@@ -16,7 +16,7 @@ contract TriggerTest is Test {
     }
 
     function testTrigger() public {
-        rewardDistributor.addTrigger(address(0), address(1));
+        rewardDistributor.addTrigger();
 
         ITypes.TriggerId triggerId = ITypes.TriggerId.wrap(1);
         ITypes.TriggerInfo memory trigger = rewardDistributor.getTrigger(
@@ -24,7 +24,7 @@ contract TriggerTest is Test {
         );
 
         assertEq(trigger.creator, address(this));
-        assertEq(trigger.data, abi.encodePacked(address(0), address(1)));
+        assertEq(trigger.data, abi.encodePacked(triggerId));
         assertEq(
             ITypes.TriggerId.unwrap(trigger.triggerId),
             ITypes.TriggerId.unwrap(triggerId)
