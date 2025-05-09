@@ -31,3 +31,9 @@ alloy-provider = { version = "0.14.0", default-features = false, features = [
     "rpc-api",
 ] }
 alloy-rpc-types = "0.14.0"
+
+## IPFS
+cid = "0.7"
+multibase = "0.9"
+multihash = "0.18"
+bs58 = "0.5"       # For decoding v0 CIDs

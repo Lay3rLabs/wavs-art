@@ -19,12 +19,16 @@ hex = "0.4.3"
 ethabi = "18.0.0"
 primitive-types = "0.13.1"
 base64 = "0.22.1"
-cid = "0.10.1"
-multihash = "0.18.1"
 alloy-network = { workspace = true }
 alloy-provider = { workspace = true }
 alloy-rpc-types = { workspace = true }
 url = "2.3.1"
+
+## IPFS
+cid = { workspace = true }
+multibase = { workspace = true }
+multihash = { workspace = true }
+bs58 = { workspace = true }
 
 # TODO these are under active development, replace with `wavs-tools` repo when done
 wavs-llm = { git = "https://github.com/Lay3rLabs/wavs-safe", branch = "WITty-refactor-0.4.0-beta.1" }

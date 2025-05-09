@@ -18,6 +18,7 @@ use evm::query_nft_ownership;
 use nft::{Attribute, NFTMetadata};
 use std::str::FromStr;
 use wavs_wasi_utils::{decode_event_log_data, evm::alloy_primitives::Address};
+use wstd::runtime::block_on;
 
 use wavs_llm::{
     client::with_config,
@@ -38,6 +39,11 @@ struct Component;
 impl Guest for Component {
     /// @dev This function is called when a WAVS trigger action is fired.
     fn run(action: TriggerAction) -> std::result::Result<Option<WasmResponse>, String> {
+        let ipfs_url = std::env::var("WAVS_ENV_PINATA_API_URL")
+            .unwrap_or_else(|_| "https://uploads.pinata.cloud/v3/files".to_string());
+        let ipfs_api_key = std::env::var("WAVS_ENV_PINATA_API_KEY")
+            .map_err(|e| format!("Failed to get API key: {}", e))?;
+
         // Decode the trigger event
         let WavsNftTrigger { sender, prompt, triggerId, wavsTriggerType, tokenId } =
             match action.data {
@@ -56,7 +62,7 @@ impl Guest for Component {
         eprintln!("Processing Trigger ID: {}", triggerId);
         eprintln!("Prompt: {}", &prompt);
 
-        let model = "llama3.2".to_string();
+        let model = "llama3.1:8b".to_string();
         let llm_config = LlmOptions {
             context_window: Some(1024),
             max_tokens: Some(1024),
@@ -154,37 +160,48 @@ impl Guest for Component {
             .decode(base64_data)
             .map_err(|e| format!("Failed to decode base64 image: {}", e))?;
 
-        // Upload image to IPFS first
-        let ipfs_url = std::env::var("WAVS_ENV_IPFS_API_URL")
-            .unwrap_or_else(|_| "https://node.lighthouse.storage/api/v0/add".to_string());
-        let image_uri = match ipfs::upload_nft_content("image/png", &image_bytes, &ipfs_url) {
-            Ok(ipfs_uri) => {
-                eprintln!("Uploaded image to IPFS: {}", ipfs_uri);
-                ipfs_uri
-            }
-            Err(e) => {
-                eprintln!("Failed to upload image to IPFS, falling back to data URI: {}", e);
-                // Fall back to data URI if IPFS upload fails
-                image_data
-            }
-        };
+        block_on(async move {
+            // Upload image to IPFS first
+            let image_uri =
+                match ipfs::upload_nft_content("image/png", &image_bytes, &ipfs_url, &ipfs_api_key)
+                    .await
+                {
+                    Ok(ipfs_uri) => {
+                        eprintln!("Uploaded image to IPFS: {}", ipfs_uri);
+                        ipfs_uri
+                    }
+                    Err(e) => {
+                        eprintln!(
+                            "Failed to upload image to IPFS, falling back to data URI: {}",
+                            e
+                        );
+                        // Fall back to data URI if IPFS upload fails
+                        image_data
+                    }
+                };
 
-        // Create NFT metadata
-        let metadata = NFTMetadata {
-            name: title,
-            description: response.to_string(),
-            image: image_uri,
-            attributes,
-        };
-        eprintln!("Metadata: {:?}", metadata);
+            // Create NFT metadata
+            let metadata = NFTMetadata {
+                name: title,
+                description: response.to_string(),
+                image: image_uri,
+                attributes,
+            };
+            eprintln!("Metadata: {:?}", metadata);
 
-        // Serialize metadata to JSON for IPFS upload
-        let json = serde_json::to_string(&metadata)
-            .map_err(|e| format!("JSON serialization error: {}", e))?;
+            // Serialize metadata to JSON for IPFS upload
+            let json = serde_json::to_string(&metadata)
+                .map_err(|e| format!("JSON serialization error: {}", e))?;
 
-        // Upload metadata to IPFS
-        let token_uri =
-            match ipfs::upload_nft_content("application/json", json.as_bytes(), &ipfs_url) {
+            // Upload metadata to IPFS
+            let token_uri = match ipfs::upload_nft_content(
+                "application/json",
+                json.as_bytes(),
+                &ipfs_url,
+                &ipfs_api_key,
+            )
+            .await
+            {
                 Ok(ipfs_uri) => {
                     eprintln!("Uploaded metadata to IPFS: {}", ipfs_uri);
                     ipfs_uri
@@ -199,35 +216,36 @@ impl Guest for Component {
                 }
             };
 
-        // Create the output based on the trigger type
-        let output = match wavsTriggerType {
-            0 => WavsResponse {
-                wavsTriggerType: WavsTriggerType::MINT,
-                triggerId,
-                data: WavsMintResult {
-                    triggerId: triggerId.into(),
-                    recipient: sender,
-                    tokenURI: token_uri,
-                }
-                .abi_encode()
-                .into(),
-            },
-            1 => WavsResponse {
-                wavsTriggerType: WavsTriggerType::UPDATE,
-                triggerId,
-                data: WavsUpdateResult {
-                    triggerId: triggerId.into(),
-                    owner: sender,
-                    tokenURI: token_uri,
-                    tokenId,
-                }
-                .abi_encode()
-                .into(),
-            },
-            _ => return Err("Invalid trigger type".to_string()),
-        };
+            // Create the output based on the trigger type
+            let output = match wavsTriggerType {
+                0 => WavsResponse {
+                    wavsTriggerType: WavsTriggerType::MINT,
+                    triggerId,
+                    data: WavsMintResult {
+                        triggerId: triggerId.into(),
+                        recipient: sender,
+                        tokenURI: token_uri,
+                    }
+                    .abi_encode()
+                    .into(),
+                },
+                1 => WavsResponse {
+                    wavsTriggerType: WavsTriggerType::UPDATE,
+                    triggerId,
+                    data: WavsUpdateResult {
+                        triggerId: triggerId.into(),
+                        owner: sender,
+                        tokenURI: token_uri,
+                        tokenId,
+                    }
+                    .abi_encode()
+                    .into(),
+                },
+                _ => return Err("Invalid trigger type".to_string()),
+            };
 
-        Ok(Some(WasmResponse { payload: output.abi_encode(), ordering: None }))
+            Ok(Some(WasmResponse { payload: output.abi_encode(), ordering: None }))
+        })
     }
 }
 
