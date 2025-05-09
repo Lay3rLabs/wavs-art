@@ -2,86 +2,89 @@
 
 set -e
 
-: '''
-# Run:
-
-sh ./build_service.sh
-
-# Overrides:
-- FILE_LOCATION: The save location of the configuration file
-- TRIGGER_ADDRESS: The address to trigger the service
-- SUBMIT_ADDRESS: The address to submit the service
-- COMPONENT_FILENAME: The filename of the component to upload (ignored if WASM_DIGEST is used)
-- WASM_DIGEST: The digest of the component to use that is already in WAVS
-- TRIGGER_EVENT: The event to trigger the service (e.g. "NewTrigger(bytes)")
-- FUEL_LIMIT: The fuel limit (wasm compute metering) for the service
-- MAX_GAS: The maximum chain gas for the submission Tx
-- ENV_VARS: The environment variables to set for the service, comma separated
-'''
-
-# == Defaults ==
-
 FUEL_LIMIT=${FUEL_LIMIT:-1000000000000}
 MAX_GAS=${MAX_GAS:-5000000}
 FILE_LOCATION=${FILE_LOCATION:-".docker/service.json"}
-COMPONENT_FILENAME=${COMPONENT_FILENAME:-"rewards.wasm"}
-TRIGGER_EVENT=${TRIGGER_EVENT:-"WavsRewardsTrigger(uint64,address,address)"}
 TRIGGER_CHAIN=${TRIGGER_CHAIN:-"local"}
 SUBMIT_CHAIN=${SUBMIT_CHAIN:-"local"}
 AGGREGATOR_URL=${AGGREGATOR_URL:-"http://127.0.0.1:8001"}
 # used in make upload-component
 WAVS_ENDPOINT=${WAVS_ENDPOINT:-"http://localhost:8000"}
-ENV_VARS=${ENV_VARS:-"WAVS_ENV_REWARD_TOKEN_ADDRESS,WAVS_ENV_REWARD_SOURCE_NFT_ADDRESS,WAVS_ENV_PINATA_API_URL,WAVS_ENV_PINATA_API_KEY"}
 export DOCKER_DEFAULT_PLATFORM=linux/amd64
 
-BASE_CMD="docker run --rm --network host -w /data -v $(pwd):/data ghcr.io/lay3rlabs/wavs:0.4.0-beta.1 wavs-cli service --json true --home /data --file /data/${FILE_LOCATION}"
+SERVICE_MANAGER_ADDR=`jq -r .addresses.WavsServiceManager .nodes/avs_deploy.json`
 
-if [ -z "$SERVICE_MANAGER_ADDRESS" ]; then
-    echo "SERVICE_MANAGER_ADDRESS is not set. Please set it to the address of the service manager."
-    exit 1
-fi
+# === Addresses ===
+REWARD_DISTRIBUTOR_ADDR=`jq -r '.reward_distributor' "./.docker/script_deploy.json"`
+REWARD_TOKEN_ADDR=`jq -r '.reward_token' "./.docker/script_deploy.json"`
+MINTER_ADDR=`jq -r '.minter' "./.docker/script_deploy.json"`
+NFT_ADDR=`jq -r '.nft' "./.docker/script_deploy.json"`
 
+# === Rewards ===
+REWARDS_COMPONENT_FILENAME=rewards.wasm
+REWARDS_TRIGGER_EVENT="WavsRewardsTrigger(uint64)"
+REWARDS_ENV_VARS="WAVS_ENV_PINATA_API_URL,WAVS_ENV_PINATA_API_KEY"
+REWARDS_CONFIG="reward_token=${REWARD_TOKEN_ADDR},nft=${REWARD_SOURCE_NFT_ADDR}"
 
-if [ -z "$TRIGGER_ADDRESS" ]; then
-    TRIGGER_ADDRESS=`make get-trigger-from-deploy`
-fi
-if [ -z "$SUBMIT_ADDRESS" ]; then
-    SUBMIT_ADDRESS=`make get-submit-from-deploy`
-fi
-if [ -z "$WASM_DIGEST" ]; then
-    WASM_DIGEST=`make upload-component COMPONENT_FILENAME=$COMPONENT_FILENAME`
-    WASM_DIGEST=$(echo ${WASM_DIGEST} | cut -d':' -f2)
-fi
+# === Autonomous Artist ===
+AUTONOMOUS_ARTIST_COMPONENT_FILENAME=autonomous_artist.wasm
+AUTONOMOUS_ARTIST_TRIGGER_EVENT="WavsNftTrigger(address,string,uint64,uint8,uint256)"
+AUTONOMOUS_ARTIST_ENV_VARS=${REWARDS_ENV_VARS}
+AUTONOMOUS_ARTIST_CONFIG="nft_contract=${NFT_ADDR}"
+
+## === Simple Relay ===
+AUTONOMOUS_ARTIST_SIMPLE_RELAY_COMPONENT_FILENAME=autonomous_artist_simple_relay.wasm
+AUTONOMOUS_ARTIST_SIMPLE_RELAY_TRIGGER_EVENT="WavsNftMint(address,uint256,string,uint64)"
+
 
 # === Core ===
 
-TRIGGER_EVENT_HASH=`cast keccak ${TRIGGER_EVENT}`
+BASE_CMD="docker run --rm --network host -w /data -v $(pwd):/data ghcr.io/lay3rlabs/wavs:0.4.0-beta.1 wavs-cli service --json true --home /data --file /data/${FILE_LOCATION}"
 
 SERVICE_ID=`$BASE_CMD init --name demo | jq -r .id`
 echo "Service ID: ${SERVICE_ID}"
 
-WORKFLOW_ID=`$BASE_CMD workflow add | jq -r '.workflows | keys | .[0]'`
-echo "Workflow ID: ${WORKFLOW_ID}"
-
-$BASE_CMD workflow trigger --id ${WORKFLOW_ID} set-evm --address ${TRIGGER_ADDRESS} --chain-name ${TRIGGER_CHAIN} --event-hash ${TRIGGER_EVENT_HASH} > /dev/null
-
-# If no aggregator is set, use the default
-SUB_CMD="set-evm"
+# If no aggregator is set, use the default (during workflow submit)
+WORKFLOW_SUB_CMD="set-evm"
 if [ -n "$AGGREGATOR_URL" ]; then
-    SUB_CMD="set-aggregator --url ${AGGREGATOR_URL}"
+    WORKFLOW_SUB_CMD="set-aggregator --url ${AGGREGATOR_URL}"
 fi
-$BASE_CMD workflow submit --id ${WORKFLOW_ID} ${SUB_CMD} --address ${SUBMIT_ADDRESS} --chain-name ${SUBMIT_CHAIN} --max-gas ${MAX_GAS} > /dev/null
 
-COMPONENT_ID=`$BASE_CMD workflow component --id ${WORKFLOW_ID} set-source-digest --digest ${WASM_DIGEST} | jq -r '.workflows | keys | .[0]'`
-echo "Component ID: ${COMPONENT_ID}"
+function new_workflow() {
+    local trigger_address=$1
+    local submit_address=$2
+    local trigger_event=$3
+    local component_filename=$4
+    local env_vars=$5
+    local config=$6
 
-# set env
-$BASE_CMD workflow component --id ${COMPONENT_ID} permissions --http-hosts '*' --file-system true > /dev/null
-$BASE_CMD workflow component --id ${COMPONENT_ID} time-limit --seconds 30 > /dev/null
-$BASE_CMD workflow component --id ${COMPONENT_ID} env --values ${ENV_VARS} > /dev/null
-$BASE_CMD workflow component --id ${COMPONENT_ID} config --values 'key=value,key2=value2' > /dev/null
+    local workflow_id=`$BASE_CMD workflow add | jq -r '.workflows | to_entries | map(select(.value.component == "unset")) | .[0].key'`
+    echo "Workflow ID: ${workflow_id}"
 
-$BASE_CMD manager set-evm --chain-name ${SUBMIT_CHAIN} --address `cast --to-checksum ${SERVICE_MANAGER_ADDRESS}`
+    local trigger_event_hash=`cast keccak ${trigger_event}`
+    $BASE_CMD workflow trigger --id ${workflow_id} set-evm --address ${trigger_address} --chain-name ${TRIGGER_CHAIN} --event-hash ${trigger_event_hash} > /dev/null
+
+    $BASE_CMD workflow submit --id ${workflow_id} ${WORKFLOW_SUB_CMD} --address ${submit_address} --chain-name ${SUBMIT_CHAIN} --max-gas ${MAX_GAS} > /dev/null
+
+    local digest=`COMPONENT_FILENAME=${component_filename} make upload-component | cut -d':' -f2`
+    $BASE_CMD workflow component --id ${workflow_id} set-source-digest --digest ${digest} > /dev/null
+    $BASE_CMD workflow component --id ${workflow_id} permissions --http-hosts '*' --file-system true > /dev/null
+    $BASE_CMD workflow component --id ${workflow_id} time-limit --seconds 60 > /dev/null
+    $BASE_CMD workflow component --id ${workflow_id} env --values ${env_vars} > /dev/null
+    $BASE_CMD workflow component --id ${workflow_id} config --values ${config} > /dev/null
+}
+
+# === Rewards ===
+new_workflow ${REWARD_DISTRIBUTOR_ADDR} ${REWARD_DISTRIBUTOR_ADDR} ${REWARDS_TRIGGER_EVENT} ${REWARDS_COMPONENT_FILENAME} ${REWARDS_ENV_VARS} ${REWARDS_CONFIG}
+
+# === Autonomous Artist (minter -> nft AND nft -> nft) ===
+new_workflow ${MINTER_ADDR} ${NFT_ADDR} ${AUTONOMOUS_ARTIST_TRIGGER_EVENT} ${AUTONOMOUS_ARTIST_COMPONENT_FILENAME} ${AUTONOMOUS_ARTIST_ENV_VARS} ${AUTONOMOUS_ARTIST_CONFIG}
+new_workflow ${NFT_ADDR} ${NFT_ADDR} ${AUTONOMOUS_ARTIST_TRIGGER_EVENT} ${AUTONOMOUS_ARTIST_COMPONENT_FILENAME} ${AUTONOMOUS_ARTIST_ENV_VARS} ${AUTONOMOUS_ARTIST_CONFIG} 
+
+# === Autonomous Artist Simple Relay (nft -> minter) ===
+new_workflow ${NFT_ADDR} ${MINTER_ADDR} ${AUTONOMOUS_ARTIST_SIMPLE_RELAY_TRIGGER_EVENT} ${AUTONOMOUS_ARTIST_SIMPLE_RELAY_COMPONENT_FILENAME} ${AUTONOMOUS_ARTIST_ENV_VARS} ${AUTONOMOUS_ARTIST_CONFIG}
+
+$BASE_CMD manager set-evm --chain-name ${SUBMIT_CHAIN} --address `cast --to-checksum ${SERVICE_MANAGER_ADDR}`
 $BASE_CMD validate > /dev/null
 
 # inform aggregator if set

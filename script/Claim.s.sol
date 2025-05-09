@@ -8,7 +8,7 @@ import {Common} from "script/Common.s.sol";
 
 import {RewardDistributor} from "contracts/RewardDistributor.sol";
 import {RewardSourceERC721} from "contracts/RewardSourceERC721.sol";
-import {RewardERC20} from "contracts/RewardERC20.sol";
+import {RewardToken} from "contracts/RewardToken.sol";
 import {ITypes} from "interfaces/ITypes.sol";
 
 /// @dev Script to claim rewards
@@ -17,9 +17,9 @@ contract ClaimScript is Common {
 
     function run(
         string calldata rewardDistributorAddr,
-        string calldata rewardErc20Addr
+        string calldata rewardTokenAddr
     ) public {
-        address rewardErc20Address = vm.parseAddress(rewardErc20Addr);
+        address rewardTokenAddress = vm.parseAddress(rewardTokenAddr);
 
         vm.startBroadcast(_privateKey);
         RewardDistributor rewardDistributor = RewardDistributor(
@@ -102,15 +102,15 @@ contract ClaimScript is Common {
 
         // Claim rewards with proof
         address claimer = vm.addr(_privateKey);
-        RewardERC20 rewardErc20 = RewardERC20(rewardErc20Address);
-        uint256 balanceBefore = rewardErc20.balanceOf(claimer);
+        RewardToken rewardToken = RewardToken(rewardTokenAddress);
+        uint256 balanceBefore = rewardToken.balanceOf(claimer);
         uint256 claimed = rewardDistributor.claim(
             claimer,
-            rewardErc20Address,
+            rewardTokenAddress,
             claimable,
             proof
         );
-        uint256 balanceAfter = rewardErc20.balanceOf(claimer);
+        uint256 balanceAfter = rewardToken.balanceOf(claimer);
 
         console.log("Balance before:", balanceBefore);
         console.log("Balance after:", balanceAfter);
