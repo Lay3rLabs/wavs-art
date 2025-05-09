@@ -3,6 +3,13 @@
 # Check if user is in docker group to determine if sudo is needed
 SUDO := $(shell if groups | grep -q docker; then echo ''; else echo 'sudo'; fi)
 
+# wavs-art custom
+SERVICE_MANAGER_ADDR?=`jq -r .addresses.WavsServiceManager .nodes/avs_deploy.json`
+REWARD_DISTRIBUTOR_ADDR?=`jq -r '.reward_distributor' "./.docker/script_deploy.json"`
+REWARD_TOKEN_ADDRESS?=`jq -r '.reward_token' .docker/script_deploy.json`
+REWARD_SOURCE_NFT_ADDRESS?=`jq -r '.reward_source_nft' .docker/script_deploy.json`
+AGGREGATOR_URL?=http://127.0.0.1:8001
+
 # Define common variables
 ANVIL_PRIVATE_KEY?=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
 CARGO=cargo
@@ -14,12 +21,13 @@ MIDDLEWARE_DOCKER_IMAGE?=ghcr.io/lay3rlabs/wavs-middleware:0.4.0-beta.1
 IPFS_ENDPOINT?=http://127.0.0.1:5001
 RPC_URL?=http://127.0.0.1:8545
 SERVICE_FILE?=.docker/service.json
-SERVICE_SUBMISSION_ADDR?=`jq -r .deployedTo .docker/submit.json`
-SERVICE_TRIGGER_ADDR?=`jq -r .deployedTo .docker/trigger.json`
+SERVICE_SUBMISSION_ADDR?=${REWARD_DISTRIBUTOR_ADDR}
+SERVICE_TRIGGER_ADDR?=${REWARD_DISTRIBUTOR_ADDR}
 WASI_BUILD_DIR ?= ""
 WAVS_CMD ?= $(SUDO) docker run --rm --network host $$(test -f .env && echo "--env-file ./.env") -v $$(pwd):/data ${DOCKER_IMAGE} wavs-cli
 WAVS_ENDPOINT?="http://127.0.0.1:8000"
 ENV_FILE?=.env
+
 
 # Default target is build
 default: build
@@ -67,6 +75,22 @@ setup: check-requirements
 start-all: clean-docker setup-env
 	@sh ./script/start_all.sh
 
+## deploy-contracts: deploying the contracts | SERVICE_MANAGER_ADDR, RPC_URL
+deploy-contracts:
+	@forge script ./script/Deploy.s.sol ${SERVICE_MANAGER_ADDR} --sig "run(string)" --rpc-url $(RPC_URL) --broadcast
+
+## build-service: building the service JSON
+build-service:
+	TRIGGER_ADDRESS=${SERVICE_TRIGGER_ADDR} SUBMIT_ADDRESS=${SERVICE_SUBMISSION_ADDR} SERVICE_MANAGER_ADDRESS=${SERVICE_MANAGER_ADDR} ./script/build_service.sh
+
+## trigger-service: triggering the service | REWARD_DISTRIBUTOR_ADDR, REWARD_TOKEN_ADDRESS, REWARD_SOURCE_NFT_ADDRESS, RPC_URL
+trigger-service:
+	@forge script ./script/Trigger.s.sol ${REWARD_DISTRIBUTOR_ADDR} ${REWARD_TOKEN_ADDRESS} ${REWARD_SOURCE_NFT_ADDRESS} --sig "run(string,string,string)" --rpc-url $(RPC_URL) --broadcast -v 4
+
+## claim: claiming the rewards | REWARD_DISTRIBUTOR_ADDR, REWARD_TOKEN_ADDRESS, RPC_URL
+claim:
+	@forge script ./script/Claim.s.sol ${REWARD_DISTRIBUTOR_ADDR} ${REWARD_TOKEN_ADDRESS} --sig "run(string,string)" --rpc-url $(RPC_URL) --broadcast -v 4
+
 ## get-trigger-from-deploy: getting the trigger address from the script deploy
 get-trigger-from-deploy:
 	@jq -r '.deployedTo' "./.docker/trigger.json"
@@ -98,8 +122,7 @@ TRIGGER_ID?=1
 show-result:
 	@forge script ./script/ShowResult.s.sol ${SERVICE_SUBMISSION_ADDR} ${TRIGGER_ID} --sig 'data(string,uint64)' --rpc-url $(RPC_URL) --broadcast
 
-
-## upload-to-ipfs: uploading the a service config to IPFS | IPFS_ENDPOINT, SERVICE_FILE
+## upload-to-ipfs: uploading the service config to IPFS | IPFS_ENDPOINT, SERVICE_FILE
 upload-to-ipfs:
 	@curl -s -X POST "${IPFS_ENDPOINT}/api/v0/add?pin=true" \
 		-H "Content-Type: multipart/form-data" \
