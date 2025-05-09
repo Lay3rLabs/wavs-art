@@ -827,10 +827,12 @@ dependencies = [
  "alloy-sol-types",
  "anyhow",
  "base64 0.22.1",
- "cid 0.10.1",
+ "bs58 0.5.1",
+ "cid",
  "ethabi",
  "hex",
  "mockall",
+ "multibase",
  "multihash 0.18.1",
  "primitive-types 0.13.1",
  "serde",
@@ -1262,19 +1264,6 @@ checksum = "f6b8976b33648136e969aafa6eb33d58ff0d301fa0b4e8d513db58fd32cd81aa"
 dependencies = [
  "multibase",
  "multihash 0.14.0",
- "unsigned-varint",
-]
-
-[[package]]
-name = "cid"
-version = "0.10.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fd94671561e36e4e7de75f753f577edafb0e7c05d6e4547229fdf7938fbcd2c3"
-dependencies = [
- "core2",
- "multibase",
- "multihash 0.18.1",
- "serde",
  "unsigned-varint",
 ]
 
@@ -4123,7 +4112,7 @@ dependencies = [
  "anyhow",
  "async-trait",
  "bs58 0.5.1",
- "cid 0.7.0",
+ "cid",
  "merkle-tree-rs",
  "multibase",
  "multihash 0.18.1",

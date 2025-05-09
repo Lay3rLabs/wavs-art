@@ -19,12 +19,15 @@ alloy-network = { workspace = true }
 alloy-provider = { workspace = true }
 alloy-rpc-types = { workspace = true }
 
+## IPFS
+cid = { workspace = true }
+multibase = { workspace = true }
+multihash = { workspace = true }
+bs58 = { workspace = true }
+
+## Other
 async-trait = "0.1.88"
 merkle-tree-rs = "0.1.0"
-cid = "0.7"
-multibase = "0.9"
-multihash = "0.18"
-bs58 = "0.5"             # For decoding v0 CIDs
 
 [lib]
 crate-type = ["cdylib"]
