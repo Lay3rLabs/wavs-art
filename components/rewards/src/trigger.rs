@@ -1,5 +1,7 @@
 use crate::{
-    bindings::wavs::worker::layer_types::{TriggerData, TriggerDataEvmContractEvent},
+    bindings::wavs::worker::layer_types::{
+        TriggerData, TriggerDataCron, TriggerDataEvmContractEvent,
+    },
     solidity,
 };
 use alloy_sol_types::SolValue;
@@ -8,6 +10,7 @@ use wavs_wasi_utils::decode_event_log_data;
 
 pub fn decode_trigger_event(trigger_data: TriggerData) -> Result<u64> {
     match trigger_data {
+        TriggerData::Cron(TriggerDataCron { trigger_time }) => Ok(trigger_time.nanos),
         TriggerData::EvmContractEvent(TriggerDataEvmContractEvent { log, .. }) => {
             let solidity::WavsRewardsTrigger { triggerId } = decode_event_log_data!(log)?;
             Ok(triggerId)
