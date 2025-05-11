@@ -22,7 +22,8 @@ NFT_ADDR=`jq -r '.nft' "./.docker/script_deploy.json"`
 
 # === Rewards ===
 REWARDS_COMPONENT_FILENAME=rewards.wasm
-REWARDS_TRIGGER_EVENT="WavsRewardsTrigger(uint64)"
+# REWARDS_TRIGGER_EVENT="WavsRewardsTrigger(uint64)"
+REWARDS_CRON_SCHEDULE="0 0 * * * *"
 REWARDS_ENV_VARS="WAVS_ENV_PINATA_API_URL,WAVS_ENV_PINATA_API_KEY"
 REWARDS_CONFIG="reward_token=${REWARD_TOKEN_ADDR},nft=${NFT_ADDR}"
 
@@ -53,16 +54,24 @@ fi
 function new_workflow() {
     local trigger_address=$1
     local submit_address=$2
-    local trigger_event=$3
-    local component_filename=$4
-    local env_vars=$5
-    local config=$6
+    local event_type=$3 # "event" or "cron"
+    local trigger_event_or_cron_schedule=$4
+    local component_filename=$5
+    local env_vars=$6
+    local config=$7
 
     local workflow_id=`$BASE_CMD workflow add | jq -r '.workflows | to_entries | map(select(.value.component == "unset")) | .[0].key'`
     echo "Workflow ID: ${workflow_id}"
 
-    local trigger_event_hash=`cast keccak ${trigger_event}`
-    $BASE_CMD workflow trigger --id ${workflow_id} set-evm --address ${trigger_address} --chain-name ${TRIGGER_CHAIN} --event-hash ${trigger_event_hash} > /dev/null
+    if [ "${event_type}" == "event" ]; then
+        local trigger_event_hash=`cast keccak ${trigger_event_or_cron_schedule}`
+        $BASE_CMD workflow trigger --id ${workflow_id} set-evm --address ${trigger_address} --chain-name ${TRIGGER_CHAIN} --event-hash ${trigger_event_hash} > /dev/null
+    elif [ "${event_type}" == "cron" ]; then
+        # no CMD for cron yet, edit the service.json file directly
+        tmp=$(mktemp)
+        jq '.workflows["'${workflow_id}'"].trigger = { "cron": { "schedule": "'"$trigger_event_or_cron_schedule"'", "start_time": null, "end_time": null } }' ${FILE_LOCATION} > ${tmp}
+        mv ${tmp} ${FILE_LOCATION}
+    fi
 
     $BASE_CMD workflow submit --id ${workflow_id} ${WORKFLOW_SUB_CMD} --address ${submit_address} --chain-name ${SUBMIT_CHAIN} --max-gas ${MAX_GAS} > /dev/null
 
@@ -75,14 +84,14 @@ function new_workflow() {
 }
 
 # === Rewards ===
-new_workflow ${REWARD_DISTRIBUTOR_ADDR} ${REWARD_DISTRIBUTOR_ADDR} ${REWARDS_TRIGGER_EVENT} ${REWARDS_COMPONENT_FILENAME} ${REWARDS_ENV_VARS} ${REWARDS_CONFIG}
+new_workflow ${REWARD_DISTRIBUTOR_ADDR} ${REWARD_DISTRIBUTOR_ADDR} "cron" "${REWARDS_CRON_SCHEDULE}" ${REWARDS_COMPONENT_FILENAME} ${REWARDS_ENV_VARS} ${REWARDS_CONFIG}
 
 # === Autonomous Artist (minter -> nft AND nft -> nft) ===
-new_workflow ${MINTER_ADDR} ${NFT_ADDR} ${AUTONOMOUS_ARTIST_TRIGGER_EVENT} ${AUTONOMOUS_ARTIST_COMPONENT_FILENAME} ${AUTONOMOUS_ARTIST_ENV_VARS} ${AUTONOMOUS_ARTIST_CONFIG}
-new_workflow ${NFT_ADDR} ${NFT_ADDR} ${AUTONOMOUS_ARTIST_TRIGGER_EVENT} ${AUTONOMOUS_ARTIST_COMPONENT_FILENAME} ${AUTONOMOUS_ARTIST_ENV_VARS} ${AUTONOMOUS_ARTIST_CONFIG} 
+new_workflow ${MINTER_ADDR} ${NFT_ADDR} "event" ${AUTONOMOUS_ARTIST_TRIGGER_EVENT} ${AUTONOMOUS_ARTIST_COMPONENT_FILENAME} ${AUTONOMOUS_ARTIST_ENV_VARS} ${AUTONOMOUS_ARTIST_CONFIG}
+new_workflow ${NFT_ADDR} ${NFT_ADDR} "event" ${AUTONOMOUS_ARTIST_TRIGGER_EVENT} ${AUTONOMOUS_ARTIST_COMPONENT_FILENAME} ${AUTONOMOUS_ARTIST_ENV_VARS} ${AUTONOMOUS_ARTIST_CONFIG} 
 
 # === Autonomous Artist Simple Relay (nft -> minter) ===
-new_workflow ${NFT_ADDR} ${MINTER_ADDR} ${AUTONOMOUS_ARTIST_SIMPLE_RELAY_TRIGGER_EVENT} ${AUTONOMOUS_ARTIST_SIMPLE_RELAY_COMPONENT_FILENAME} ${AUTONOMOUS_ARTIST_ENV_VARS} ${AUTONOMOUS_ARTIST_CONFIG}
+new_workflow ${NFT_ADDR} ${MINTER_ADDR} "event" ${AUTONOMOUS_ARTIST_SIMPLE_RELAY_TRIGGER_EVENT} ${AUTONOMOUS_ARTIST_SIMPLE_RELAY_COMPONENT_FILENAME} ${AUTONOMOUS_ARTIST_ENV_VARS} ${AUTONOMOUS_ARTIST_CONFIG}
 
 $BASE_CMD manager set-evm --chain-name ${SUBMIT_CHAIN} --address `cast --to-checksum ${SERVICE_MANAGER_ADDR}`
 $BASE_CMD validate > /dev/null
