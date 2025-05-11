@@ -4,7 +4,7 @@ import { BrowserRouter } from "react-router-dom";
 import App from "./App";
 import "./index.css";
 import { WagmiConfig } from "wagmi";
-import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
+import { darkTheme, RainbowKitProvider } from "@rainbow-me/rainbowkit";
 import "@rainbow-me/rainbowkit/styles.css";
 import { Toaster } from "react-hot-toast";
 import { wagmiConfig, chains } from "@/utils/config";
@@ -12,7 +12,7 @@ import { wagmiConfig, chains } from "@/utils/config";
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
     <WagmiConfig config={wagmiConfig}>
-      <RainbowKitProvider chains={chains}>
+      <RainbowKitProvider chains={chains} theme={darkTheme()}>
         <BrowserRouter>
           <App />
           <Toaster position="top-right" />

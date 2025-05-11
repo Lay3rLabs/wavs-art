@@ -4,6 +4,7 @@ import * as raw from 'multiformats/codecs/raw';
 import { sha256 } from 'multiformats/hashes/sha2';
 import * as Digest from 'multiformats/hashes/digest';
 import { toString as uint8ArrayToString, fromString as uint8ArrayFromString } from 'uint8arrays';
+import { Buffer } from 'buffer';
 
 /**
  * Converts a bytes32 digest hex string from a contract to a proper IPFS CID in

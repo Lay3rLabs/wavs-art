@@ -7,9 +7,12 @@ import React, {
 } from "react";
 import { useAccount, usePublicClient, useWalletClient } from "wagmi";
 import { ethers } from "ethers";
-import WavsMinterABI from "../abis/WavsMinter.json";
-import WavsNftABI from "../abis/WavsNft.json";
-import { MINTER_CONTRACT_ADDRESS, NFT_CONTRACT_ADDRESS, DEFAULT_MINT_PRICE } from "../constants";
+import { DEFAULT_MINT_PRICE } from "../constants";
+import {
+  getBrowserProviderWalletSigner,
+  getMinterContract,
+  getNftContract,
+} from "@/utils/clients";
 
 interface MintContextType {
   mintPrice: string;
@@ -62,47 +65,24 @@ export const MintProvider: React.FC<MintProviderProps> = ({ children }) => {
   const publicClient = usePublicClient();
   const { data: walletClient } = useWalletClient();
 
-  // Create contract instances
-  const getMinterContract = () => {
-    if (!publicClient) return null;
-    // For ethers v5 compatibility with wagmi
-    const provider = new ethers.JsonRpcProvider(
-      "http://localhost:8545"
-    );
-    return new ethers.Contract(
-      MINTER_CONTRACT_ADDRESS,
-      WavsMinterABI,
-      provider
-    );
-  };
-
-  const getNftContract = () => {
-    if (!publicClient) return null;
-    // For ethers v5 compatibility with wagmi
-    const provider = new ethers.JsonRpcProvider(
-      "http://localhost:8545"
-    );
-    return new ethers.Contract(NFT_CONTRACT_ADDRESS, WavsNftABI, provider);
-  };
-
   // Get the mint price from the contract
   const loadMintPrice = async () => {
     try {
       setLoadingMintPrice(true);
       const minterContract = getMinterContract();
-      if (!minterContract) return;
 
       try {
         // First check if the contract exists by getting its code
-        const provider = new ethers.JsonRpcProvider("http://localhost:8545");
-        const code = await provider.getCode(MINTER_CONTRACT_ADDRESS);
-        
-        if (code === '0x') {
-          console.error(`Contract does not exist at ${MINTER_CONTRACT_ADDRESS}`);
+        const code = await minterContract.getDeployedCode();
+
+        if (!code || code === "0x") {
+          console.error(
+            `Contract does not exist at ${await minterContract.getAddress()}`
+          );
           setMintPrice(DEFAULT_MINT_PRICE);
           return;
         }
-        
+
         // If the contract exists, try to call mintPrice()
         const price = await minterContract.mintPrice();
         setMintPrice(ethers.formatEther(price));
@@ -151,10 +131,13 @@ export const MintProvider: React.FC<MintProviderProps> = ({ children }) => {
       const storedMints = localStorage.getItem(`pendingMints-${address}`);
       if (storedMints) {
         const parsedMints = JSON.parse(storedMints);
-        
+
         // Filter out any that are too old (over 24 hours)
         const recent = parsedMints
-          .filter((mint: PendingMint) => Date.now() - mint.timestamp < 24 * 60 * 60 * 1000)
+          .filter(
+            (mint: PendingMint) =>
+              Date.now() - mint.timestamp < 24 * 60 * 60 * 1000
+          )
           .map((mint: PendingMint) => {
             // Make sure startProgress is defined
             if (mint.startProgress === undefined) {
@@ -162,7 +145,7 @@ export const MintProvider: React.FC<MintProviderProps> = ({ children }) => {
             }
             return mint;
           });
-        
+
         setPendingMints(recent);
         localStorage.setItem(`pendingMints-${address}`, JSON.stringify(recent));
       }
@@ -180,7 +163,7 @@ export const MintProvider: React.FC<MintProviderProps> = ({ children }) => {
       if (!nftContract) return;
 
       const balance = await nftContract.balanceOf(address);
-      const tokenCount = balance.toNumber();
+      const tokenCount = Number(balance);
 
       const nfts: OwnedNft[] = [];
 
@@ -195,7 +178,10 @@ export const MintProvider: React.FC<MintProviderProps> = ({ children }) => {
           // Assume tokenURI is either IPFS or HTTP URL
           const isIpfs = tokenURI.startsWith("ipfs://");
           const metadataUrl = isIpfs
-            ? tokenURI.replace("ipfs://", "https://gateway.lighthouse.storage/ipfs/")
+            ? tokenURI.replace(
+                "ipfs://",
+                "https://gateway.lighthouse.storage/ipfs/"
+              )
             : tokenURI;
 
           const response = await fetch(metadataUrl);
@@ -203,7 +189,10 @@ export const MintProvider: React.FC<MintProviderProps> = ({ children }) => {
 
           if (metadata.image) {
             imageUrl = metadata.image.startsWith("ipfs://")
-              ? metadata.image.replace("ipfs://", "https://gateway.lighthouse.storage/ipfs/")
+              ? metadata.image.replace(
+                  "ipfs://",
+                  "https://gateway.lighthouse.storage/ipfs/"
+                )
               : metadata.image;
           }
         } catch (error) {
@@ -228,31 +217,26 @@ export const MintProvider: React.FC<MintProviderProps> = ({ children }) => {
   const triggerMint = async (prompt: string): Promise<string | null> => {
     if (!address || !isConnected || !walletClient || !publicClient) return null;
 
+    // Create contract instance with ethers
+    const { provider, signer } = await getBrowserProviderWalletSigner();
+    const minterContract = getMinterContract(undefined, signer);
+    const nftContract = getNftContract(undefined, signer);
+
     try {
       // Create ethers signer
-      const provider = new ethers.BrowserProvider({
-        request: walletClient.request.bind(walletClient),
-      } as any);
-      const signer = await provider.getSigner();
-      
-      // Check if the contract exists
-      const jsonRpcProvider = new ethers.JsonRpcProvider("http://localhost:8545");
-      const bytecode = await jsonRpcProvider.getCode(MINTER_CONTRACT_ADDRESS);
-      if (bytecode === '0x') {
-        throw new Error(`Contract does not exist at ${MINTER_CONTRACT_ADDRESS}. Please make sure the contracts are deployed to your local network.`);
-      }
 
-      // Create contract instance with ethers
-      const contract = new ethers.Contract(
-        MINTER_CONTRACT_ADDRESS,
-        WavsMinterABI,
-        signer
-      );
+      // Check if the contract exists
+      const bytecode = await minterContract.getDeployedCode();
+      if (!bytecode || bytecode === "0x") {
+        throw new Error(
+          `Contract does not exist at ${await minterContract.getAddress()}. Please make sure the contracts are deployed to your local network.`
+        );
+      }
 
       // Get the mint price from the contract
       let price;
       try {
-        price = await contract.mintPrice();
+        price = await minterContract.mintPrice();
       } catch (error) {
         console.error(
           "Error fetching mint price from contract, using default:",
@@ -279,7 +263,7 @@ export const MintProvider: React.FC<MintProviderProps> = ({ children }) => {
         // Add network-specific information
         if (
           chainId === 31337 || // Anvil default
-          chainId === 1337 ||  // Ganache/Hardhat default
+          chainId === 1337 || // Ganache/Hardhat default
           chainName.includes("local") ||
           chainName.includes("anvil") ||
           chainName.includes("hardhat") ||
@@ -321,8 +305,11 @@ export const MintProvider: React.FC<MintProviderProps> = ({ children }) => {
         console.log("Local environment detected, logging debug info:");
         console.log("Chain ID:", publicClient.chain.id);
         console.log("Chain Name:", publicClient.chain.name);
-        console.log("Minter Contract Address:", MINTER_CONTRACT_ADDRESS);
-        console.log("NFT Contract Address:", NFT_CONTRACT_ADDRESS);
+        console.log(
+          "Minter Contract Address:",
+          await minterContract.getAddress()
+        );
+        console.log("NFT Contract Address:", await nftContract.getAddress());
         console.log("Connected Address:", address);
         console.log("Mint Price (wei):", price.toString());
         console.log(
@@ -332,48 +319,72 @@ export const MintProvider: React.FC<MintProviderProps> = ({ children }) => {
 
         try {
           // Try to read contract bytecode to check if it exists
-          const minterBytecode = await provider.getCode(MINTER_CONTRACT_ADDRESS);
-          const nftBytecode = await provider.getCode(NFT_CONTRACT_ADDRESS);
-          
-          console.log("Minter Contract exists?", minterBytecode !== "0x");
-          console.log("NFT Contract exists?", nftBytecode !== "0x");
-          
+          const minterBytecode = await minterContract.getDeployedCode();
+          const nftBytecode = await nftContract.getDeployedCode();
+
+          console.log(
+            "Minter Contract exists?",
+            !!minterBytecode && minterBytecode !== "0x"
+          );
+          console.log(
+            "NFT Contract exists?",
+            !!nftBytecode && nftBytecode !== "0x"
+          );
+
           if (minterBytecode === "0x") {
             console.error(
               "⚠️ MINTER CONTRACT DOES NOT EXIST at address:",
-              MINTER_CONTRACT_ADDRESS
+              await minterContract.getAddress()
             );
-            console.log("Deploy the contract with: forge script script/Deploy.s.sol:Deploy --rpc-url http://localhost:8545 --broadcast");
+            console.log(
+              "Deploy the contract with: forge script script/Deploy.s.sol:Deploy --rpc-url http://localhost:8545 --broadcast"
+            );
           }
-          
+
           if (nftBytecode === "0x") {
             console.error(
               "⚠️ NFT CONTRACT DOES NOT EXIST at address:",
-              NFT_CONTRACT_ADDRESS
+              await nftContract.getAddress()
             );
           }
-          
+
           // Show a way to deploy with the specific contract addresses
-          console.log("\nTo deploy the contracts to these exact addresses, run the following commands:");
+          console.log(
+            "\nTo deploy the contracts to these exact addresses, run the following commands:"
+          );
           console.log(`1. Start anvil with specific accounts: 
            anvil --accounts 2 --balance 10000 --chain-id 1337`);
           console.log(`2. Deploy the contracts with the specific addresses:
            forge script script/Deploy.s.sol:Deploy --rpc-url http://localhost:8545 --broadcast`);
-          console.log("\nAfter deployment, check if the contracts were deployed to the expected addresses.");
+          console.log(
+            "\nAfter deployment, check if the contracts were deployed to the expected addresses."
+          );
         } catch (e) {
           console.error("Error checking contract bytecode:", e);
         }
       }
 
+      const feeData = await provider.getFeeData();
+      console.log("Fee data:", feeData);
+
       // Execute the transaction
-      const tx = await contract.triggerMint(prompt, {
+      const tx = await minterContract.triggerMint(prompt, {
         value: price,
-        // Adding explicit gasLimit to prevent estimation errors
+        maxFeePerGas: feeData.maxFeePerGas
+          ? feeData.maxFeePerGas + ethers.parseUnits("10", "gwei")
+          : undefined,
+        maxPriorityFeePerGas: feeData.maxPriorityFeePerGas
+          ? feeData.maxPriorityFeePerGas + ethers.parseUnits("10", "gwei")
+          : undefined,
         gasLimit: 300000,
       });
 
+      console.log("Tx:", tx);
+
       // Wait for the transaction to be mined
       const receipt = await tx.wait();
+
+      console.log("Receipt:", receipt);
 
       // Find the WavsNftTrigger event in the logs
       const event = receipt.events?.find((e) => e.event === "WavsNftTrigger");
@@ -421,7 +432,7 @@ export const MintProvider: React.FC<MintProviderProps> = ({ children }) => {
           );
           console.error("3. You might be connected to the wrong network");
 
-          const errorMsg = `Contract error: The mintPrice() function is not available. Make sure the contract is deployed at ${MINTER_CONTRACT_ADDRESS} on your current network.`;
+          const errorMsg = `Contract error: The mintPrice() function is not available. Make sure the contract is deployed at ${await minterContract.getAddress()} on your current network.`;
           throw new Error(errorMsg);
         }
       }
@@ -438,7 +449,7 @@ export const MintProvider: React.FC<MintProviderProps> = ({ children }) => {
   // Set up event listeners for MintFulfilled events
   useEffect(() => {
     const minterContract = getMinterContract();
-    if (!minterContract || !address || !publicClient) return;
+    if (!address || !publicClient) return;
 
     const mintFulfilledFilter = minterContract.filters.MintFulfilled();
 

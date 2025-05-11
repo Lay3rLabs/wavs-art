@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Routes, Route } from "react-router-dom";
 import Header from "./components/Header";
-import MintForm from "./components/MintForm";
-import NFTGallery from "./components/NFTGallery";
 import NFTDetailPage from "./components/NFTDetailPage";
 import HomePage from "./components/HomePage";
 import DebugInfo from "./components/DebugInfo";
@@ -66,7 +64,6 @@ const BOOT_MESSAGES = [
 const App: React.FC = () => {
   const [bootSequence, setBootSequence] = useState(true);
   const [bootPhase, setBootPhase] = useState(0);
-  const [loadingText, setLoadingText] = useState("");
 
   // Add the local Anvil network to MetaMask when the app loads
   useEffect(() => {
@@ -113,7 +110,6 @@ const App: React.FC = () => {
     const timer = setTimeout(
       () => {
         if (bootPhase < BOOT_MESSAGES.length) {
-          setLoadingText(BOOT_MESSAGES[bootPhase]);
           setBootPhase((prev) => prev + 1);
         } else {
           setBootSequence(false);
@@ -243,6 +239,8 @@ const App: React.FC = () => {
         
         {/* Debug Panel (toggle with Ctrl+Shift+D) */}
         <DebugInfo />
+
+        <Header />
 
         <Routes>
           <Route path="/" element={<HomePage />} />

@@ -5,8 +5,8 @@ export interface RewardClaim extends PendingReward {
 }
 
 export interface PendingReward {
-  account: string;
-  reward: string;
+  account: `0x${string}`;
+  reward: `0x${string}`;
   claimable: string;
   proof: string[];
 }
@@ -15,7 +15,7 @@ export interface MerkleTreeData {
   id: string;
   metadata: {
     num_accounts: number;
-    reward_token_address: string;
+    reward_token_address: `0x${string}`;
     total_rewards: string;
     sources: {
       name: string;

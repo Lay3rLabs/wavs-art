@@ -4,7 +4,7 @@ import ERC20_ABI from "@/abis/ERC20.json";
 import WavsNftAbi from "@/abis/WavsNft.json";
 import { getAccount, getPublicClient, writeContract } from "wagmi/actions";
 import { bytes32DigestToCid, cidToUrl, normalizeCid } from "./ipfs";
-import { getDistributorContract, getProvider } from "./web3";
+import { getDistributorContract, getProvider } from "./clients";
 
 // Fetch Merkle Tree data from IPFS
 export async function fetchMerkleTreeData(
@@ -52,35 +52,41 @@ export async function getPendingRewards(
   return pendingReward || null;
 }
 
-// Fetch current trigger info from the contract
-export async function fetchCurrentTriggerInfo(
-  distributorAddress: string
-): Promise<{ ipfsHash: string; root: string }> {
-  console.log(`Fetching trigger info from ${distributorAddress}`);
+// Fetch reward state from the distributor contract
+export async function fetchRewardState(
+  distributorAddress: `0x${string}`
+): Promise<{ ipfsHash: string | null; root: string | null }> {
+  console.log(`Fetching reward state from ${distributorAddress}`);
 
   const distributor = getDistributorContract(distributorAddress);
 
   // Read the root
-  const root = await distributor.root();
+  let root = await distributor.root();
 
   // Read the IPFS hash
-  const ipfsHashBytes = await distributor.ipfsHash();
+  let ipfsHash = await distributor.ipfsHash();
 
   console.log("Raw root:", root);
-  console.log("Raw ipfsHashBytes:", ipfsHashBytes);
+  console.log("Raw ipfsHashBytes:", ipfsHash);
 
-  // Convert bytes32 to a proper IPFS CID
-  const ipfsHash = await bytes32DigestToCid(ipfsHashBytes as string);
+  root = /^0x0+$/.test(root as string) ? null : root;
+  // Convert bytes32 to a proper IPFS CID if present
+  ipfsHash = /^0x0+$/.test(ipfsHash as string)
+    ? null
+    : await bytes32DigestToCid(ipfsHash as string);
   console.log("Converted bytes32 to IPFS CID:", ipfsHash);
 
-  return { ipfsHash, root: root as string };
+  return {
+    ipfsHash,
+    root,
+  };
 }
 
 // Claim rewards
 export async function claimRewards(
-  distributorAddress: string,
-  account: string,
-  rewardToken: string,
+  distributorAddress: `0x${string}`,
+  account: `0x${string}`,
+  rewardToken: `0x${string}`,
   claimable: string,
   proof: string[]
 ): Promise<string> {
@@ -93,7 +99,12 @@ export async function claimRewards(
     address: distributorAddress as `0x${string}`,
     abi: REWARDS_DISTRIBUTOR_ABI,
     functionName: "claim",
-    args: [account as `0x${string}`, rewardToken as `0x${string}`, BigInt(claimable), proof as `0x${string}`[]],
+    args: [
+      account as `0x${string}`,
+      rewardToken as `0x${string}`,
+      BigInt(claimable),
+      proof as `0x${string}`[],
+    ],
   });
 
   console.log("Claim transaction sent:", hash);
@@ -102,9 +113,9 @@ export async function claimRewards(
 
 // Get claimed amount
 export async function getClaimedAmount(
-  distributorAddress: string,
-  account: string,
-  rewardToken: string
+  distributorAddress: `0x${string}`,
+  account: `0x${string}`,
+  rewardToken: `0x${string}`
 ): Promise<string> {
   console.log(`Getting claimed amount for ${account} and token ${rewardToken}`);
 
@@ -181,23 +192,26 @@ export async function getEthBalance(address: string): Promise<string> {
 // Request ETH from local Anvil faucet using anvil_setBalance RPC call
 export async function requestFaucetEth(amount: string = "10"): Promise<string> {
   console.log(`Setting balance to ${amount} ETH via anvil_setBalance`);
-  
+
   const account = getAccount();
   if (!account.address) {
     throw new Error("No account address available");
   }
-  
+
   const provider = getProvider();
-  
+
   // Convert ETH amount to wei (as hexadecimal string)
   const amountInWei = BigInt(parseFloat(amount) * 1e18).toString(16);
   const hexAmount = "0x" + amountInWei;
-  
+
   try {
     // Use the RPC method anvil_setBalance directly
     // This method is specific to Anvil and directly sets an account's balance
-    const result = await provider.send("anvil_setBalance", [account.address, hexAmount]);
-    
+    const result = await provider.send("anvil_setBalance", [
+      account.address,
+      hexAmount,
+    ]);
+
     console.log("Balance set via anvil_setBalance:", result);
     return "Balance updated successfully";
   } catch (error) {
