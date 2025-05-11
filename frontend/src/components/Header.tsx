@@ -1,7 +1,10 @@
 import React from 'react';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
+import { Link, useLocation } from 'react-router-dom';
 
 const Header: React.FC = () => {
+  const location = useLocation();
+
   return (
     <header className="w-full py-6 px-4 md:px-8 flex justify-between items-center relative border-b border-dark-700 backdrop-blur-sm z-10">
       {/* Animated header underline */}
@@ -32,6 +35,26 @@ const Header: React.FC = () => {
             TOP SECRET
           </span>
         </h1>
+      </div>
+
+      {/* Navigation buttons */}
+      <div className="hidden md:flex items-center space-x-4">
+        <Link
+          to="/" 
+          className={`text-sm font-mono text-white hover:text-primary transition-colors ${
+            location.pathname === '/' ? 'border-b-2 border-primary' : ''
+          }`}
+        >
+          HOME
+        </Link>
+        <Link 
+          to="/rewards" 
+          className={`text-sm font-mono text-white hover:text-primary transition-colors ${
+            location.pathname === '/rewards' ? 'border-b-2 border-primary' : ''
+          }`}
+        >
+          REWARDS
+        </Link>
       </div>
       
       {/* Status indicators */}

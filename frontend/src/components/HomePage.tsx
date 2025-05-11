@@ -1,13 +1,10 @@
 import React from 'react';
-import Header from './Header';
 import MintForm from './MintForm';
 import NFTGallery from './NFTGallery';
 
 const HomePage: React.FC = () => {
   return (
     <>
-      <Header />
-      
       <main className="flex-1 py-8 px-4 md:px-8 max-w-6xl mx-auto w-full">
         <section className="mb-12 relative">
           {/* Decorative circuit pattern */}

@@ -7,7 +7,7 @@ import {
   getPendingRewards,
   getClaimedAmount,
   claimRewards,
-  fetchCurrentTriggerInfo,
+  fetchRewardState,
   getERC721Balance,
 } from "@/utils/wagmi-utils";
 import {
@@ -18,7 +18,7 @@ import {
 } from "@/types";
 
 interface UseRewardsProps {
-  distributorAddress: string;
+  distributorAddress: `0x${string}`;
 }
 
 export function useRewards({ distributorAddress }: UseRewardsProps) {
@@ -41,20 +41,20 @@ export function useRewards({ distributorAddress }: UseRewardsProps) {
   const loadInitialData = useCallback(async () => {
     try {
       setIsLoading(true);
-      console.log("Fetching trigger info from contract:", distributorAddress);
+      console.log("Fetching reward state from contract:", distributorAddress);
 
-      const { ipfsHash, root } = await fetchCurrentTriggerInfo(
+      const { ipfsHash, root } = await fetchRewardState(
         distributorAddress
       );
 
-      if (ipfsHash) {
+      if (ipfsHash && root) {
         setCurrentIpfsHash(ipfsHash);
         setMerkleRoot(root);
       } else {
-        console.log("No valid IPFS hash found in contract");
+        console.log("No valid IPFS hash or merkle root found in contract");
       }
     } catch (err) {
-      console.error("Error fetching trigger info:", err);
+      console.error("Error fetching reward state:", err);
       setError("Failed to load reward data from contract");
     } finally {
       setIsLoading(false);

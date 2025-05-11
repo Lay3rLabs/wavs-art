@@ -4,15 +4,16 @@ import {
 } from '@rainbow-me/rainbowkit';
 import '@rainbow-me/rainbowkit/styles.css';
 import { configureChains, createConfig } from 'wagmi';
-import { mainnet, sepolia, holesky } from 'wagmi/chains';
+import {  holesky } from 'wagmi/chains';
 import { publicProvider } from 'wagmi/providers/public';
 import { jsonRpcProvider } from 'wagmi/providers/jsonRpc';
-import { defineChain } from 'viem';
+import { Chain, defineChain } from 'viem';
+import { IS_LOCALHOST } from '@/constants';
 
 export const localhost = defineChain({
-  id: 31337,
-  name: 'Localhost',
-  network: 'localhost',
+  id: 17_000,
+  name: 'Localhost Holesky fork',
+  network: 'localhost_holesky',
   nativeCurrency: {
     decimals: 18,
     name: 'Ether',
@@ -25,20 +26,24 @@ export const localhost = defineChain({
   testnet: true,
 })
 
+const _chains: Chain[] = IS_LOCALHOST ? [localhost] : [holesky];
+
 export const { chains, publicClient, webSocketPublicClient } = configureChains(
-  [mainnet, holesky, sepolia, localhost],
+  _chains,
   [
     jsonRpcProvider({
-      rpc: () => ({
-        http: 'http://localhost:8545',
+      rpc: (chain) => ({
+        http: chain.rpcUrls.default.http[0],
       }),
     }),
     publicProvider()
   ]
 );
 
+console.log("Chains:", chains, _chains);
+
 const { wallets } = getDefaultWallets({
-  appName: 'Wavs NFT Generator',
+  appName: 'WAVS Art',
   projectId: 'YOUR_WALLETCONNECT_PROJECT_ID', // Replace with your WalletConnect project ID in production
   chains,
 });

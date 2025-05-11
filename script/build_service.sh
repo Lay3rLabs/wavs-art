@@ -24,7 +24,7 @@ NFT_ADDR=`jq -r '.nft' "./.docker/script_deploy.json"`
 REWARDS_COMPONENT_FILENAME=rewards.wasm
 REWARDS_TRIGGER_EVENT="WavsRewardsTrigger(uint64)"
 REWARDS_ENV_VARS="WAVS_ENV_PINATA_API_URL,WAVS_ENV_PINATA_API_KEY"
-REWARDS_CONFIG="reward_token=${REWARD_TOKEN_ADDR},nft=${REWARD_SOURCE_NFT_ADDR}"
+REWARDS_CONFIG="reward_token=${REWARD_TOKEN_ADDR},nft=${NFT_ADDR}"
 
 # === Autonomous Artist ===
 AUTONOMOUS_ARTIST_COMPONENT_FILENAME=autonomous_artist.wasm
