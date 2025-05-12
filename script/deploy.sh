@@ -4,8 +4,20 @@
 
 cd "$(dirname "$0")/.."
 
-# wait for the services to start
-while [ ! -f .docker/start.log ]; do echo "waiting for start.log" && sleep 1; done
+# wait for the anvil chain to start
+while [ ! -f .docker/start.log ]; do echo "waiting for the chain to start" && sleep 1; done
+
+# wait for the ipfs container to be ready
+while ! curl -s http://localhost:8080/ipfs > /dev/null; do
+  echo "waiting for ipfs to be ready on port 8080..."
+  sleep 1
+done
+
+# wait for the wavs service to be ready
+while ! curl -s http://localhost:8000 > /dev/null; do
+  echo "waiting for wavs to be ready on port 8000..."
+  sleep 1
+done
 
 # deploy the contracts
 make deploy-contracts
