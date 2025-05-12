@@ -8,7 +8,7 @@ import {IWavsNftServiceTypes} from "interfaces/IWavsNftServiceTypes.sol";
 import {Common} from "./Common.s.sol";
 import {Strings} from "@openzeppelin-contracts/utils/Strings.sol";
 
-contract Trigger is Common {
+contract Mint is Common {
     /**
      * @dev Triggers the NFT minter contract with a prompt
      * @param _minterAddr The address of the minter contract

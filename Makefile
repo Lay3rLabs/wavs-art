@@ -8,6 +8,7 @@ SERVICE_MANAGER_ADDR?=`jq -r .addresses.WavsServiceManager .nodes/avs_deploy.jso
 REWARD_DISTRIBUTOR_ADDR?=`jq -r '.reward_distributor' "./.docker/script_deploy.json"`
 REWARD_TOKEN_ADDRESS?=`jq -r '.reward_token' .docker/script_deploy.json`
 REWARD_SOURCE_NFT_ADDRESS?=`jq -r '.reward_source_nft' .docker/script_deploy.json`
+NFT_MINTER_ADDRESS?=`jq -r '.minter' .docker/script_deploy.json`
 AGGREGATOR_URL?=http://127.0.0.1:8001
 
 # Define common variables
@@ -94,6 +95,10 @@ build-service:
 ## trigger-service: triggering the service | REWARD_DISTRIBUTOR_ADDR, REWARD_TOKEN_ADDRESS, REWARD_SOURCE_NFT_ADDRESS, RPC_URL
 trigger-service:
 	@forge script ./script/Trigger.s.sol ${REWARD_DISTRIBUTOR_ADDR} ${REWARD_TOKEN_ADDRESS} ${REWARD_SOURCE_NFT_ADDRESS} --sig "run(string,string,string)" --rpc-url $(RPC_URL) --broadcast -v 4
+
+## mint-nft: minting the NFT | NFT_MINTER_ADDRESS, RPC_URL
+mint-nft:
+	@forge script ./script/Mint.s.sol ${NFT_MINTER_ADDRESS} "mystical governance" --sig "run(address,string)" --rpc-url $(RPC_URL) --broadcast -v 4
 
 ## claim: claiming the rewards | REWARD_DISTRIBUTOR_ADDR, REWARD_TOKEN_ADDRESS, RPC_URL
 claim:
