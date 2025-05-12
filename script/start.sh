@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 cd "$(dirname "$0")/.."
 
 cast wallet new-mnemonic --json > .docker/operator1.json

@@ -12,10 +12,14 @@ export DOCKER_DEFAULT_PLATFORM=linux/amd64
 ## == Start watcher ==
 rm $LOG_FILE 2> /dev/null || true
 
+## == Start ipfs, ollama, sd-api, and download-sd1.5 first ==
+docker compose up ipfs ollama download-sd1.5 sd-api --remove-orphans &
+echo "Started ipfs, ollama, download-sd1.5, and sd-api services"
+
 ## == Base Anvil Testnet Fork ==
 anvil --fork-url https://ethereum-holesky-rpc.publicnode.com --port ${PORT} &
 anvil_pid=$!
-trap "kill -9 $anvil_pid && echo -e '\nKilled anvil'" EXIT
+trap "kill -9 $anvil_pid && docker compose down && echo -e '\nKilled anvil and docker services'" EXIT
 while ! cast block-number --rpc-url http://localhost:${PORT} > /dev/null 2>&1
 do
   sleep 0.25
@@ -49,7 +53,7 @@ sed -i${SP}'' -e "s/^WAVS_AGGREGATOR_CREDENTIAL=.*$/WAVS_AGGREGATOR_CREDENTIAL=\
 sed -i${SP}'' -e "s/^WAVS_SUBMISSION_MNEMONIC=.*$/WAVS_SUBMISSION_MNEMONIC=\"$OPERATOR_MNEMONIC\"/" .env
 
 # == WAVS & Aggregator ==
-docker compose up --remove-orphans &
+docker compose up wavs aggregator --remove-orphans &
 trap "docker compose down && echo -e '\nKilled WAVS'" EXIT
 
 # fin
