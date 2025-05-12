@@ -132,13 +132,47 @@ make build
 ### Start WAVS and Anvil
 
 ```bash
+# default: GPU
 make start
+
+# no GPU, use CPU instead (very slow)
+DOCKER_COMPOSE_FILE=docker-compose.cpu.yml make start
 ```
 
 ### Deploy contracts/services
 
 ```bash
 make deploy
+```
+
+### Mint NFT
+
+```bash
+PROMPT="mystical governance" make mint-nft
+```
+
+### Update NFT
+
+```bash
+PROMPT="natural governance" make update-nft
+```
+
+### Show NFT
+
+```bash
+make show-nft
+```
+
+### Update Rewards
+
+```bash
+make update-rewards
+```
+
+### Claim Rewards
+
+```bash
+make claim-rewards
 ```
 
 ### Start the frontend

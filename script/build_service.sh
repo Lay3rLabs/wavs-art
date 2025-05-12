@@ -22,7 +22,7 @@ NFT_ADDR=`jq -r '.nft' "./.docker/script_deploy.json"`
 
 # === Rewards ===
 REWARDS_COMPONENT_FILENAME=rewards.wasm
-# REWARDS_TRIGGER_EVENT="WavsRewardsTrigger(uint64)"
+REWARDS_TRIGGER_EVENT="WavsRewardsTrigger(uint64)"
 REWARDS_CRON_SCHEDULE="0 0 * * * *"
 REWARDS_ENV_VARS="WAVS_ENV_PINATA_API_URL,WAVS_ENV_PINATA_API_KEY"
 REWARDS_CONFIG="reward_token=${REWARD_TOKEN_ADDR},nft=${NFT_ADDR}"
@@ -87,7 +87,8 @@ function new_workflow() {
     fi
 }
 
-# === Rewards ===
+# === Rewards (event trigger AND cron schedule) ===
+new_workflow ${REWARD_DISTRIBUTOR_ADDR} ${REWARD_DISTRIBUTOR_ADDR} "event" ${REWARDS_TRIGGER_EVENT} ${REWARDS_COMPONENT_FILENAME} ${REWARDS_ENV_VARS} ${REWARDS_CONFIG}
 new_workflow ${REWARD_DISTRIBUTOR_ADDR} ${REWARD_DISTRIBUTOR_ADDR} "cron" "${REWARDS_CRON_SCHEDULE}" ${REWARDS_COMPONENT_FILENAME} ${REWARDS_ENV_VARS} ${REWARDS_CONFIG}
 
 # === Autonomous Artist (minter -> nft AND nft -> nft) ===

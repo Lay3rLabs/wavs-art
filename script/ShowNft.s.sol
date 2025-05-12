@@ -9,6 +9,7 @@ import {IWavsNftServiceTypes} from "interfaces/IWavsNftServiceTypes.sol";
 import {Common} from "./Common.s.sol";
 import {Strings} from "@openzeppelin-contracts/utils/Strings.sol";
 
+/// @dev Script to show the NFT
 contract ShowNft is Common {
     function run(address _nftAddr, address _minterAddr) public view {
         console.log(

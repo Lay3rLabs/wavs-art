@@ -12,7 +12,7 @@ import {RewardToken} from "contracts/RewardToken.sol";
 import {ITypes} from "interfaces/ITypes.sol";
 
 /// @dev Script to claim rewards
-contract ClaimScript is Common {
+contract ClaimRewards is Common {
     using stdJson for string;
 
     function run(

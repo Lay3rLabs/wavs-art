@@ -6,7 +6,7 @@ import {console} from "forge-std/console.sol";
 import {WavsNft} from "contracts/WavsNft.sol";
 import {Common} from "./Common.s.sol";
 
-/// @dev Script to trigger an NFT update
+/// @dev Script to update an NFT
 contract UpdateNft is Common {
     /**
      * @dev Triggers an update for an existing NFT

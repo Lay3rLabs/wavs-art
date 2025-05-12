@@ -8,8 +8,8 @@ import {Common} from "script/Common.s.sol";
 import {RewardDistributor} from "contracts/RewardDistributor.sol";
 import {ITypes} from "interfaces/ITypes.sol";
 
-/// @dev Script to add a new trigger
-contract TriggerScript is Common {
+/// @dev Script to update the rewards
+contract UpdateRewards is Common {
     function run(string calldata rewardDistributorAddr) public {
         vm.startBroadcast(_privateKey);
         RewardDistributor rewardDistributor = RewardDistributor(

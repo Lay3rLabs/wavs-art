@@ -7,8 +7,9 @@ SUDO := $(shell if groups | grep -q docker; then echo ''; else echo 'sudo'; fi)
 SERVICE_MANAGER_ADDR?=`jq -r .addresses.WavsServiceManager .nodes/avs_deploy.json`
 REWARD_DISTRIBUTOR_ADDR?=`jq -r '.reward_distributor' "./.docker/script_deploy.json"`
 REWARD_TOKEN_ADDRESS?=`jq -r '.reward_token' .docker/script_deploy.json`
-REWARD_SOURCE_NFT_ADDRESS?=`jq -r '.reward_source_nft' .docker/script_deploy.json`
 NFT_MINTER_ADDRESS?=`jq -r '.minter' .docker/script_deploy.json`
+NFT_ADDRESS?=`jq -r '.nft' .docker/script_deploy.json`
+DEFAULT_PROMPT="mystical governance"
 AGGREGATOR_URL?=http://127.0.0.1:8001
 
 # Define common variables
@@ -92,25 +93,25 @@ deploy-contracts:
 build-service:
 	TRIGGER_ADDRESS=${SERVICE_TRIGGER_ADDR} SUBMIT_ADDRESS=${SERVICE_SUBMISSION_ADDR} SERVICE_MANAGER_ADDRESS=${SERVICE_MANAGER_ADDR} ./script/build_service.sh
 
-## trigger-service: triggering the service | REWARD_DISTRIBUTOR_ADDR, REWARD_TOKEN_ADDRESS, REWARD_SOURCE_NFT_ADDRESS, RPC_URL
-trigger-service:
-	@forge script ./script/Trigger.s.sol ${REWARD_DISTRIBUTOR_ADDR} ${REWARD_TOKEN_ADDRESS} ${REWARD_SOURCE_NFT_ADDRESS} --sig "run(string,string,string)" --rpc-url $(RPC_URL) --broadcast -v 4
-
-## mint-nft: minting the NFT | NFT_MINTER_ADDRESS, RPC_URL
+## mint-nft: minting the NFT | PROMPT,NFT_MINTER_ADDRESS, RPC_URL
 mint-nft:
-	@forge script ./script/Mint.s.sol ${NFT_MINTER_ADDRESS} "mystical governance" --sig "run(address,string)" --rpc-url $(RPC_URL) --broadcast -v 4
+	@forge script ./script/MintNft.s.sol ${NFT_MINTER_ADDRESS} ${PROMPT:=${DEFAULT_PROMPT}} --sig "run(address,string)" --rpc-url $(RPC_URL) --broadcast -v 4
 
-## claim: claiming the rewards | REWARD_DISTRIBUTOR_ADDR, REWARD_TOKEN_ADDRESS, RPC_URL
-claim:
-	@forge script ./script/Claim.s.sol ${REWARD_DISTRIBUTOR_ADDR} ${REWARD_TOKEN_ADDRESS} --sig "run(string,string)" --rpc-url $(RPC_URL) --broadcast -v 4
+## update-nft: updating the NFT | PROMPT,NFT_MINTER_ADDRESS, RPC_URL
+update-nft:
+	@forge script ./script/UpdateNft.s.sol ${NFT_ADDRESS} ${TOKEN_ID} ${PROMPT:=${DEFAULT_PROMPT}} --sig "run(address,uint256,string)" --rpc-url $(RPC_URL) --broadcast -v 4
 
-## get-trigger-from-deploy: getting the trigger address from the script deploy
-get-trigger-from-deploy:
-	@jq -r '.deployedTo' "./.docker/trigger.json"
+## show-nft: showing the NFT | NFT_ADDRESS, NFT_MINTER_ADDRESS, RPC_URL
+show-nft:
+	@forge script ./script/ShowNft.s.sol ${NFT_ADDRESS} ${NFT_MINTER_ADDRESS} --sig "run(address,address)" --rpc-url $(RPC_URL) --broadcast -v 4
 
-## get-submit-from-deploy: getting the submit address from the script deploy
-get-submit-from-deploy:
-	@jq -r '.deployedTo' "./.docker/submit.json"
+## update-rewards: updating the rewards | REWARD_DISTRIBUTOR_ADDR, RPC_URL
+update-rewards:
+	@forge script ./script/UpdateRewards.s.sol ${REWARD_DISTRIBUTOR_ADDR} --sig "run(string)" --rpc-url $(RPC_URL) --broadcast -v 4
+
+## claim-rewards: claiming the rewards | REWARD_DISTRIBUTOR_ADDR, REWARD_TOKEN_ADDRESS, RPC_URL
+claim-rewards:
+	@forge script ./script/ClaimRewards.s.sol ${REWARD_DISTRIBUTOR_ADDR} ${REWARD_TOKEN_ADDRESS} --sig "run(string,string)" --rpc-url $(RPC_URL) --broadcast -v 4
 
 ## wavs-cli: running wavs-cli in docker
 wavs-cli:
@@ -125,15 +126,6 @@ SERVICE_URL?="http://127.0.0.1:8080/ipfs/service.json"
 ## deploy-service: deploying the WAVS component service json | SERVICE_URL, CREDENTIAL, WAVS_ENDPOINT
 deploy-service:
 	@$(WAVS_CMD) deploy-service --service-url "$(SERVICE_URL)" --log-level=info --data /data/.docker --home /data $(if $(WAVS_ENDPOINT),--wavs-endpoint $(WAVS_ENDPOINT),) $(if $(CREDENTIAL),--evm-credential $(CREDENTIAL),)
-
-## get-trigger: get the trigger id | SERVICE_TRIGGER_ADDR, RPC_URL
-get-trigger:
-	@forge script ./script/ShowResult.s.sol ${SERVICE_TRIGGER_ADDR} --sig 'trigger(string)' --rpc-url $(RPC_URL) --broadcast
-
-TRIGGER_ID?=1
-## show-result: showing the result | SERVICE_SUBMISSION_ADDR, TRIGGER_ID, RPC_URL
-show-result:
-	@forge script ./script/ShowResult.s.sol ${SERVICE_SUBMISSION_ADDR} ${TRIGGER_ID} --sig 'data(string,uint64)' --rpc-url $(RPC_URL) --broadcast
 
 ## upload-to-ipfs: uploading the service config to IPFS | IPFS_ENDPOINT, SERVICE_FILE
 upload-to-ipfs:

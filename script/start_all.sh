@@ -7,6 +7,7 @@ MIDDLEWARE_IMAGE=ghcr.io/lay3rlabs/wavs-middleware:0.4.0-beta.2
 LOG_FILE=.docker/start.log
 OPERATOR_PK=${OPERATOR_PK:-""}
 OPERATOR_MNEMONIC=${OPERATOR_MNEMONIC:-""}
+DOCKER_COMPOSE_FILE=${DOCKER_COMPOSE_FILE:-"docker-compose.yml"}
 export DOCKER_DEFAULT_PLATFORM=linux/amd64
 
 ## == Start watcher ==
@@ -49,8 +50,8 @@ sed -i${SP}'' -e "s/^WAVS_AGGREGATOR_CREDENTIAL=.*$/WAVS_AGGREGATOR_CREDENTIAL=\
 sed -i${SP}'' -e "s/^WAVS_SUBMISSION_MNEMONIC=.*$/WAVS_SUBMISSION_MNEMONIC=\"$OPERATOR_MNEMONIC\"/" .env
 
 # == WAVS & Aggregator ==
-docker compose up --remove-orphans &
-trap "docker compose down && echo -e '\nKilled WAVS'" EXIT
+docker compose -f ${DOCKER_COMPOSE_FILE} up --remove-orphans &
+trap "docker compose -f ${DOCKER_COMPOSE_FILE} down && echo -e '\nKilled WAVS'" EXIT
 
 # fin
 date +%s > $LOG_FILE
