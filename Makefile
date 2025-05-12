@@ -71,9 +71,17 @@ setup: check-requirements
 	@forge install
 	@npm install
 
+## start: run start script
+start:
+	@bash ./script/start.sh
+
+## deploy: run deploy script
+deploy:
+	@bash ./script/deploy.sh
+
 ## start-all: starting anvil and WAVS with docker compose
 start-all: clean-docker setup-env
-	@sh ./script/start_all.sh
+	@bash ./script/start_all.sh
 
 ## deploy-contracts: deploying the contracts | SERVICE_MANAGER_ADDR, RPC_URL
 deploy-contracts:
