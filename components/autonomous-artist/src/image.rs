@@ -17,6 +17,7 @@ struct StableDiffusionRequest {
     width: u32,           // Image width
     height: u32,          // Image height
     sampler_name: String, // Specific sampler to use
+    scheduler: String,    // Specific scheduler to use
     model: String,        // Specific model checkpoint
 }
 
@@ -48,7 +49,8 @@ pub fn generate_deterministic_image(prompt: &str) -> Result<String, String> {
             cfg_scale: 7.0,
             width: 512,
             height: 512,
-            sampler_name: "DPM++ 2M Karras".to_string(),
+            sampler_name: "DPM++ 2M".to_string(),
+            scheduler: "Karras".to_string(),
             model: "v1-5-pruned-emaonly".to_string(), // Match the model specified by the user
         };
 
@@ -90,7 +92,11 @@ pub fn generate_deterministic_image(prompt: &str) -> Result<String, String> {
                 .map_err(|e| format!("Failed to read error response: {}", e))?;
 
             let error_text = String::from_utf8_lossy(&error_body);
-            return Err(format!("API error: status {} - {}", response.status(), error_text));
+            return Err(format!(
+                "stable diffusion API error: status {} - {}",
+                response.status(),
+                error_text
+            ));
         }
 
         // Read response body

@@ -51,8 +51,8 @@ services:
 
   ollama:
     image: ollama/ollama:latest
-    expose:
-      - "11434"
+    ports:
+      - "11434:11434"
     stop_signal: SIGKILL
     environment:
       HSA_OVERRIDE_GFX_VERSION: "11.0.0"
@@ -96,12 +96,13 @@ services:
     build: ./.docker/AUTOMATIC1111
     tty: true
     stop_signal: SIGKILL
-    expose:
-      - "7860"
+    ports:
+      - "7860:7860"
     volumes:
       - ./.docker/data_stable-diffusion:/data
     environment:
-      - CLI_ARGS=--api --skip-install --medvram --allow-code
+      # - CLI_ARGS=--api --skip-install --medvram --allow-code
+      - CLI_ARGS=--api --lowvram --precision full --no-half --skip-torch-cuda-test --skip-install
       # GPU
       # - CLI_ARGS=--api --skip-install --medvram --xformers --allow-code
     networks:
@@ -122,8 +123,8 @@ services:
   # sdxl
   # sd-api:
   #   image: saladtechnologies/sdnext-sdxl10:latest
-  #   expose:
-  #     - "7860"
+  #   ports:
+  #     - "7860:7860"
   #   environment:
   #     - PORT=7860
   #     - HOST=0.0.0.0

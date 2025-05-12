@@ -11,6 +11,7 @@ use base64;
 use base64::Engine;
 use bindings::{
     export,
+    host::config_var,
     wavs::worker::layer_types::{TriggerData, TriggerDataEvmContractEvent},
     Guest, TriggerAction, WasmResponse,
 };
@@ -98,9 +99,8 @@ impl Guest for Component {
         let mut attributes =
             vec![Attribute { trait_type: "Prompt".to_string(), value: prompt.clone() }];
 
-        // TODO get nft contract address from KV store
-        let nft_contract = std::env::var("nft_contract")
-            .map_err(|e| format!("Failed to get nft contract: {}", e))?;
+        let nft_contract =
+            config_var("nft_contract").ok_or_else(|| "Failed to get nft contract")?;
         eprintln!("NFT contract: {}", nft_contract);
 
         // Query NFT balance and add a "wealth" attribute if balance > 1 ETH

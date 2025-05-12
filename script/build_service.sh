@@ -30,7 +30,7 @@ REWARDS_CONFIG="reward_token=${REWARD_TOKEN_ADDR},nft=${NFT_ADDR}"
 # === Autonomous Artist ===
 AUTONOMOUS_ARTIST_COMPONENT_FILENAME=autonomous_artist.wasm
 AUTONOMOUS_ARTIST_TRIGGER_EVENT="WavsNftTrigger(address,string,uint64,uint8,uint256)"
-AUTONOMOUS_ARTIST_ENV_VARS=${REWARDS_ENV_VARS}
+AUTONOMOUS_ARTIST_ENV_VARS="${REWARDS_ENV_VARS},WAVS_ENV_OLLAMA_API_URL,WAVS_ENV_SD_API_URL"
 AUTONOMOUS_ARTIST_CONFIG="nft_contract=${NFT_ADDR}"
 
 ## === Simple Relay ===
@@ -78,9 +78,13 @@ function new_workflow() {
     local digest=`COMPONENT_FILENAME=${component_filename} make upload-component | cut -d':' -f2`
     $BASE_CMD workflow component --id ${workflow_id} set-source-digest --digest ${digest} > /dev/null
     $BASE_CMD workflow component --id ${workflow_id} permissions --http-hosts '*' --file-system true > /dev/null
-    $BASE_CMD workflow component --id ${workflow_id} time-limit --seconds 60 > /dev/null
-    $BASE_CMD workflow component --id ${workflow_id} env --values ${env_vars} > /dev/null
-    $BASE_CMD workflow component --id ${workflow_id} config --values ${config} > /dev/null
+    $BASE_CMD workflow component --id ${workflow_id} time-limit --seconds 1800 > /dev/null
+    if [ -n "${env_vars}" ]; then
+        $BASE_CMD workflow component --id ${workflow_id} env --values ${env_vars} > /dev/null
+    fi
+    if [ -n "${config}" ]; then
+        $BASE_CMD workflow component --id ${workflow_id} config --values ${config} > /dev/null
+    fi
 }
 
 # === Rewards ===
@@ -91,7 +95,7 @@ new_workflow ${MINTER_ADDR} ${NFT_ADDR} "event" ${AUTONOMOUS_ARTIST_TRIGGER_EVEN
 new_workflow ${NFT_ADDR} ${NFT_ADDR} "event" ${AUTONOMOUS_ARTIST_TRIGGER_EVENT} ${AUTONOMOUS_ARTIST_COMPONENT_FILENAME} ${AUTONOMOUS_ARTIST_ENV_VARS} ${AUTONOMOUS_ARTIST_CONFIG} 
 
 # === Autonomous Artist Simple Relay (nft -> minter) ===
-new_workflow ${NFT_ADDR} ${MINTER_ADDR} "event" ${AUTONOMOUS_ARTIST_SIMPLE_RELAY_TRIGGER_EVENT} ${AUTONOMOUS_ARTIST_SIMPLE_RELAY_COMPONENT_FILENAME} ${AUTONOMOUS_ARTIST_ENV_VARS} ${AUTONOMOUS_ARTIST_CONFIG}
+new_workflow ${NFT_ADDR} ${MINTER_ADDR} "event" ${AUTONOMOUS_ARTIST_SIMPLE_RELAY_TRIGGER_EVENT} ${AUTONOMOUS_ARTIST_SIMPLE_RELAY_COMPONENT_FILENAME} "" ${AUTONOMOUS_ARTIST_CONFIG}
 
 $BASE_CMD manager set-evm --chain-name ${SUBMIT_CHAIN} --address `cast --to-checksum ${SERVICE_MANAGER_ADDR}`
 $BASE_CMD validate > /dev/null

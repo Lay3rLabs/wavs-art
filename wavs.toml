@@ -96,6 +96,8 @@ gas_denom = "untrn"
 # Registry domain
 registry_domain = "wa.dev"
 
+max_execution_seconds = 1800
+
 cors_allowed_origins = [
     "https://lay3rlabs.github.io/*",
     "http://localhost:*",
