@@ -2,6 +2,8 @@
 
 # run ./script/start.sh in another terminal
 
+set -e
+
 cd "$(dirname "$0")/.."
 
 # wait for the services to start
