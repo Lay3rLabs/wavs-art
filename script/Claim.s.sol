@@ -23,7 +23,7 @@ contract ClaimScript is Common {
 
         vm.startBroadcast(_privateKey);
         RewardDistributor rewardDistributor = RewardDistributor(
-            vm.parseAddress(rewardDistributorAddr)
+            payable(vm.parseAddress(rewardDistributorAddr))
         );
 
         ITypes.TriggerId triggerId = rewardDistributor.nextTriggerId();

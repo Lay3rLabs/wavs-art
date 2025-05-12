@@ -13,7 +13,7 @@ contract TriggerScript is Common {
     function run(string calldata rewardDistributorAddr) public {
         vm.startBroadcast(_privateKey);
         RewardDistributor rewardDistributor = RewardDistributor(
-            vm.parseAddress(rewardDistributorAddr)
+            payable(vm.parseAddress(rewardDistributorAddr))
         );
 
         rewardDistributor.addTrigger();

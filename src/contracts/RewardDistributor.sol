@@ -123,4 +123,10 @@ contract RewardDistributor is
     ) external view returns (bytes memory _data) {
         _data = _datas[_triggerId];
     }
+
+    /**
+     * @notice Allows the contract to receive ETH
+     * @dev This function is called when ETH is sent to the contract
+     */
+    receive() external payable {}
 }
