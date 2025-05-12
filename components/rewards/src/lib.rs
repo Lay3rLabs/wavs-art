@@ -68,6 +68,11 @@ impl Guest for Component {
             let total_rewards =
                 results.iter().map(|v| v[2].parse::<U512>().unwrap()).sum::<U512>().to_string();
 
+            if results.len() == 0 {
+                eprintln!("No accounts to distribute rewards to");
+                return Ok(None);
+            }
+
             let tree = get_merkle_tree(results.clone())?;
             let root = tree.root();
             let root_bytes = hex::decode(&root).map_err(|e| e.to_string())?;
