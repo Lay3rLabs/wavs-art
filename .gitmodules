@@ -1,9 +1,0 @@
-[submodule "wavs-rewards"]
-	path = wavs-rewards
-	url = https://github.com/Lay3rLabs/wavs-rewards
-[submodule "wavs-nft"]
-	path = wavs-nft
-	url = https://github.com/Lay3rLabs/wavs-nft
-[submodule "wavs-foundry-template"]
-	path = wavs-foundry-template
-	url = https://github.com/Lay3rLabs/wavs-foundry-template
