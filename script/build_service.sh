@@ -75,7 +75,7 @@ function new_workflow() {
 
     $BASE_CMD workflow submit --id ${workflow_id} ${WORKFLOW_SUB_CMD} --address ${submit_address} --chain-name ${SUBMIT_CHAIN} --max-gas ${MAX_GAS} > /dev/null
 
-    local digest=`COMPONENT_FILENAME=${component_filename} make upload-component | cut -d':' -f2`
+    local digest=`COMPONENT_FILENAME=${component_filename} make --no-print-directory upload-component | cut -d':' -f2`
     $BASE_CMD workflow component --id ${workflow_id} set-source-digest --digest ${digest} > /dev/null
     $BASE_CMD workflow component --id ${workflow_id} permissions --http-hosts '*' --file-system true > /dev/null
     $BASE_CMD workflow component --id ${workflow_id} time-limit --seconds 1800 > /dev/null

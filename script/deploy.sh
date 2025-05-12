@@ -2,8 +2,6 @@
 
 # run ./script/start.sh in another terminal
 
-set -e
-
 cd "$(dirname "$0")/.."
 
 # wait for the services to start
@@ -16,12 +14,12 @@ make deploy-contracts
 make build-service
 
 # upload the service to IPFS
-IPFS_CID=`make upload-to-ipfs`
+IPFS_CID=`make --no-print-directory upload-to-ipfs`
 
 # deploy the service
 export DEPLOYER_PK=`cat .nodes/deployer`
 export SERVICE_URL="http://127.0.0.1:8080/ipfs/$IPFS_CID"
-CREDENTIAL=$DEPLOYER_PK make deploy-service
+CREDENTIAL=$DEPLOYER_PK make --no-print-directory deploy-service
 
 # register service operator
 source .env
