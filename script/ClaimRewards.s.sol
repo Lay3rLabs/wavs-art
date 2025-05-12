@@ -41,6 +41,7 @@ contract ClaimRewards is Common {
 
         bytes32 root = rewardDistributor.root();
         bytes32 ipfsHash = rewardDistributor.ipfsHash();
+        string memory ipfsHashCid = rewardDistributor.ipfsHashCid();
 
         if (root == avsOutput.root && ipfsHash == avsOutput.ipfsHashData) {
             console.log(
@@ -53,11 +54,14 @@ contract ClaimRewards is Common {
             console.log("");
             console.log("ipfsHash:");
             console.logBytes32(ipfsHash);
-            console.log(avsOutput.ipfsHash);
+            console.log("ipfsHashCid:");
+            console.log(ipfsHashCid);
             console.log("--------------------------------");
             console.log("");
         } else {
-            console.log("Trigger failed, root or ipfsHash mismatch. This will happen if the last rewards update occurred due to a cron schedule and not a manual trigger.");
+            console.log(
+                "Trigger failed, root or ipfsHash mismatch. This will happen if the last rewards update occurred due to a cron schedule and not a manual trigger."
+            );
             console.log("");
             console.log("--------------------------------");
             console.log("");
@@ -66,6 +70,8 @@ contract ClaimRewards is Common {
             console.log("");
             console.log("contract ipfsHash:");
             console.logBytes32(ipfsHash);
+            console.log("contract ipfsHashCid:");
+            console.log(ipfsHashCid);
             console.log("");
             console.log("--------------------------------");
             console.log("");
@@ -84,7 +90,7 @@ contract ClaimRewards is Common {
 
         // access IPFS_GATEWAY_URL from env
         string memory ipfsGatewayUrl = vm.envString("IPFS_GATEWAY_URL");
-        string memory url = string.concat(ipfsGatewayUrl, ipfsHash);
+        string memory url = string.concat(ipfsGatewayUrl, ipfsHashCid);
 
         console.log("Merkle data URL: ", url);
         console.log("Claiming rewards...");

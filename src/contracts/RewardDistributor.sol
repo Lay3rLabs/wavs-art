@@ -32,6 +32,9 @@ contract RewardDistributor is
     /// @notice Service manager instance
     IWavsServiceManager private _serviceManager;
 
+    /// @notice The optional ipfs hash CID containing metadata about the root (e.g. the merkle tree itself).
+    string public ipfsHashCid;
+
     /**
      * @notice Initialize the contract
      * @param serviceManager The service manager instance
@@ -104,6 +107,7 @@ contract RewardDistributor is
         );
 
         _setRoot(avsOutput.root, avsOutput.ipfsHashData);
+        ipfsHashCid = avsOutput.ipfsHash;
     }
 
     function isValidTriggerId(
