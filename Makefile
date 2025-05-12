@@ -15,7 +15,6 @@ PROMPT?="mystical governance"
 AGGREGATOR_URL?=http://127.0.0.1:8001
 ANVIL_PRIVATE_KEY?=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
 CARGO=cargo
-COIN_MARKET_CAP_ID?=1
 COMPONENT_FILENAME?=rewards.wasm
 CREDENTIAL?=""
 DOCKER_IMAGE?=ghcr.io/lay3rlabs/wavs:0.4.0-beta.2
@@ -23,13 +22,10 @@ MIDDLEWARE_DOCKER_IMAGE?=ghcr.io/lay3rlabs/wavs-middleware:0.4.0-beta.2
 IPFS_ENDPOINT?=http://127.0.0.1:5001
 RPC_URL?=http://127.0.0.1:8545
 SERVICE_FILE?=.docker/service.json
-SERVICE_SUBMISSION_ADDR?=${REWARD_DISTRIBUTOR_ADDR}
-SERVICE_TRIGGER_ADDR?=${REWARD_DISTRIBUTOR_ADDR}
 WASI_BUILD_DIR ?= ""
 WAVS_CMD ?= $(SUDO) docker run --rm --network host $$(test -f .env && echo "--env-file ./.env") -v $$(pwd):/data ${DOCKER_IMAGE} wavs-cli
 WAVS_ENDPOINT?="http://127.0.0.1:8000"
 ENV_FILE?=.env
-
 
 # Default target is build
 default: build
@@ -40,12 +36,6 @@ build: _build_forge wasi-build
 ## wasi-build: building WAVS wasi components | WASI_BUILD_DIR
 wasi-build:
 	@./script/build_components.sh $(WASI_BUILD_DIR)
-
-## wasi-exec: executing the WAVS wasi component(s) | COMPONENT_FILENAME, COIN_MARKET_CAP_ID
-wasi-exec: pull-image
-	@$(WAVS_CMD) exec --log-level=info --data /data/.docker --home /data \
-	--component "/data/compiled/$(COMPONENT_FILENAME)" \
-	--input `cast format-bytes32-string $(COIN_MARKET_CAP_ID)`
 
 ## clean: cleaning the project files
 clean: clean-docker
@@ -95,7 +85,7 @@ deploy-contracts:
 
 ## build-service: building the service JSON
 build-service:
-	TRIGGER_ADDRESS=${SERVICE_TRIGGER_ADDR} SUBMIT_ADDRESS=${SERVICE_SUBMISSION_ADDR} SERVICE_MANAGER_ADDRESS=${SERVICE_MANAGER_ADDR} ./script/build_service.sh
+	@bash ./script/build_service.sh
 
 ## mint-nft: minting the NFT | PROMPT,NFT_MINTER_ADDRESS, RPC_URL
 mint-nft:
@@ -149,7 +139,6 @@ operator-register:
 		exit 1; \
 	fi
 	@docker run --rm --network host --env-file ${ENV_FILE} -v ./.nodes:/root/.nodes --entrypoint /wavs/register.sh ${MIDDLEWARE_DOCKER_IMAGE} "${AVS_PRIVATE_KEY}"
-
 
 ## update-submodules: update the git submodules
 update-submodules:

@@ -3,7 +3,7 @@ pragma solidity ^0.8.22;
 
 import {ITypes} from "interfaces/ITypes.sol";
 
-interface ISimpleTrigger is ITypes {
+interface IWavsTrigger is ITypes {
     /**
      * @notice Struct to store trigger information
      * @param creator Address of the creator of the trigger

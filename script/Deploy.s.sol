@@ -65,10 +65,9 @@ contract DeployScript is Common {
             Strings.toChecksumHexString(address(rewardToken))
         );
         _json.serialize("nft", Strings.toChecksumHexString(address(nft)));
-        _json.serialize("minter", Strings.toChecksumHexString(address(minter)));
         string memory finalJson = _json.serialize(
-            "service_handler",
-            Strings.toChecksumHexString(address(nft))
+            "minter",
+            Strings.toChecksumHexString(address(minter))
         );
 
         vm.writeFile(script_output_path, finalJson);

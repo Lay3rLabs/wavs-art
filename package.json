@@ -1,6 +1,6 @@
 {
   "name": "wavs-art",
-  "version": "1.0.0",
+  "version": "0.4.0-beta.2",
   "license": "MIT",
   "scripts": {
     "build": "forge build",

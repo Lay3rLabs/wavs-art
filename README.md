@@ -111,13 +111,15 @@ docker run --rm --gpus all nvidia/cuda:12.3.1-base-ubuntu20.04 nvidia-smi
 # install dependencies
 make setup
 
+# run tests
+make test
+
 # copy the example env file
 cp .env.example .env
 ```
 
 Set the following environment variables in the `.env` file:
 
-- `WAVS_ENV_PINATA_API_URL`
 - `WAVS_ENV_PINATA_API_KEY`
 - `IPFS_GATEWAY_URL`
 

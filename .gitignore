@@ -16,3 +16,4 @@ wavs:worker*.wasm
 .nodes
 
 .docker/data_*
+.DS_Store

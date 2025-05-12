@@ -1,23 +1,23 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.22;
 
-import {ISimpleTrigger} from "interfaces/IWavsTrigger.sol";
+import {IWavsTrigger} from "interfaces/IWavsTrigger.sol";
 import {ITypes} from "interfaces/ITypes.sol";
 import {IWavsServiceManager} from "@wavs/interfaces/IWavsServiceManager.sol";
 import {IWavsServiceHandler} from "@wavs/interfaces/IWavsServiceHandler.sol";
 import {UniversalRewardsDistributor} from "@morpho-org/universal-rewards-distributor/UniversalRewardsDistributor.sol";
 
 contract RewardDistributor is
-    ISimpleTrigger,
+    IWavsTrigger,
     IWavsServiceHandler,
     UniversalRewardsDistributor
 {
-    /// @inheritdoc ISimpleTrigger
+    /// @inheritdoc IWavsTrigger
     TriggerId public nextTriggerId;
 
-    /// @inheritdoc ISimpleTrigger
+    /// @inheritdoc IWavsTrigger
     mapping(TriggerId _triggerId => Trigger _trigger) public triggersById;
-    /// @notice See ISimpleTrigger.triggerIdsByCreator
+    /// @notice See IWavsTrigger.triggerIdsByCreator
     mapping(address _creator => TriggerId[] _triggerIds)
         internal _triggerIdsByCreator;
 
@@ -45,7 +45,7 @@ contract RewardDistributor is
         _serviceManager = serviceManager;
     }
 
-    /// @inheritdoc ISimpleTrigger
+    /// @inheritdoc IWavsTrigger
     function addTrigger() external {
         // Get the next trigger id
         nextTriggerId = TriggerId.wrap(TriggerId.unwrap(nextTriggerId) + 1);
@@ -64,7 +64,7 @@ contract RewardDistributor is
         emit WavsRewardsTrigger(TriggerId.unwrap(_triggerId));
     }
 
-    /// @inheritdoc ISimpleTrigger
+    /// @inheritdoc IWavsTrigger
     function getTrigger(
         TriggerId triggerId
     ) external view override returns (TriggerInfo memory _triggerInfo) {
@@ -76,7 +76,7 @@ contract RewardDistributor is
         });
     }
 
-    /// @inheritdoc ISimpleTrigger
+    /// @inheritdoc IWavsTrigger
     function triggerIdsByCreator(
         address _creator
     ) external view returns (TriggerId[] memory _triggerIds) {
