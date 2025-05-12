@@ -267,6 +267,10 @@ contract WavsNft is
         );
     }
 
+    /**
+     * @notice Returns an array of all NFT owners
+     * @return An array of all NFT owners
+     */
     function getAllOwners() external view returns (address[] memory) {
         uint256 totalSupply = totalSupply();
         address[] memory owners = new address[](totalSupply);
