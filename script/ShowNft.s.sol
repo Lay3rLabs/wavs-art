@@ -35,10 +35,25 @@ contract ShowNft is Common {
             string memory dataURI = nft.tokenURI(lastTokenId);
             console.log("Token URI:", dataURI);
 
-            // Extract base64 data for decoding
+            // Extract base64 data for decoding, only if dataURI starts with "data:application/json;base64,"
             bytes memory dataURIBytes = bytes(dataURI);
             bytes memory base64Prefix = bytes("data:application/json;base64,");
-            if (dataURIBytes.length > base64Prefix.length) {
+
+            // Check if the dataURI starts with the expected prefix. Otherwise
+            // it's probably an IPFS URI in plain text.
+            bool hasPrefix = true;
+            if (dataURIBytes.length < base64Prefix.length) {
+                hasPrefix = false;
+            } else {
+                for (uint256 i = 0; i < base64Prefix.length; i++) {
+                    if (dataURIBytes[i] != base64Prefix[i]) {
+                        hasPrefix = false;
+                        break;
+                    }
+                }
+            }
+
+            if (hasPrefix) {
                 bytes memory data = new bytes(
                     dataURIBytes.length - base64Prefix.length
                 );
