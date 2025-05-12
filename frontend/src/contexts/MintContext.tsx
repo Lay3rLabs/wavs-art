@@ -6,7 +6,7 @@ import React, {
   ReactNode,
 } from "react";
 import { useAccount, usePublicClient, useWalletClient } from "wagmi";
-import { ethers } from "ethers";
+import { ContractTransactionResponse, ethers } from "ethers";
 import { DEFAULT_MINT_PRICE } from "../constants";
 import {
   getBrowserProviderWalletSigner,
@@ -367,18 +367,22 @@ export const MintProvider: React.FC<MintProviderProps> = ({ children }) => {
       const feeData = await provider.getFeeData();
       console.log("Fee data:", feeData);
 
-      // Execute the transaction
-      const tx = await minterContract.triggerMint(prompt, {
+      // Execute the transaction - ensure gas params are properly set
+      const options: any = {
         value: price,
-        maxFeePerGas: feeData.maxFeePerGas
-          ? feeData.maxFeePerGas + ethers.parseUnits("10", "gwei")
-          : undefined,
-        maxPriorityFeePerGas: feeData.maxPriorityFeePerGas
-          ? feeData.maxPriorityFeePerGas + ethers.parseUnits("10", "gwei")
-          : undefined,
-        gasLimit: 300000,
-      });
-
+        gasLimit: 300000
+      };
+      
+      // Only add maxFeePerGas and maxPriorityFeePerGas if they exist
+      if (feeData.maxFeePerGas) {
+        options.maxFeePerGas = feeData.maxFeePerGas;
+      }
+      if (feeData.maxPriorityFeePerGas) {
+        options.maxPriorityFeePerGas = feeData.maxPriorityFeePerGas;
+      }
+      
+      const tx: ContractTransactionResponse = await minterContract.triggerMint(prompt, options);
+      
       console.log("Tx:", tx);
 
       // Wait for the transaction to be mined
@@ -387,8 +391,8 @@ export const MintProvider: React.FC<MintProviderProps> = ({ children }) => {
       console.log("Receipt:", receipt);
 
       // Find the WavsNftTrigger event in the logs
-      const event = receipt.events?.find((e) => e.event === "WavsNftTrigger");
-      if (!event) return null;
+      const event = receipt?.logs.length ? minterContract.interface.parseLog(receipt.logs[0]) : null;
+      if (!event || event.name !== "WavsNftTrigger") return null;
 
       const triggerId = event.args.triggerId.toString();
 

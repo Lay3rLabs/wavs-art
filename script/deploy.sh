@@ -1,11 +1,8 @@
 #!/bin/bash
 
-### run in another terminal:
-###
-### cast wallet new-mnemonic --json > .docker/operator1.json
-### export OPERATOR_MNEMONIC=`cat .docker/operator1.json | jq -r .mnemonic`
-### export OPERATOR_PK=`cat .docker/operator1.json | jq -r '.accounts[0].private_key'`
-### make start-all
+# run ./script/start.sh in another terminal
+
+cd "$(dirname "$0")/.."
 
 # wait for the services to start
 while [ ! -f .docker/start.log ]; do echo "waiting for start.log" && sleep 1; done

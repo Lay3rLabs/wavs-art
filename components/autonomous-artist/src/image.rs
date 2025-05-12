@@ -45,7 +45,7 @@ pub fn generate_deterministic_image(prompt: &str) -> Result<String, String> {
             negative_prompt: "blurry, bad quality, distorted, nonsquare, not full, borders"
                 .to_string(),
             seed: 42, // Always use the same seed
-            steps: 30,
+            steps: 20,
             cfg_scale: 7.0,
             width: 512,
             height: 512,
