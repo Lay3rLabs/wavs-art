@@ -99,11 +99,11 @@ build-service:
 
 ## mint-nft: minting the NFT | PROMPT,NFT_MINTER_ADDRESS, RPC_URL
 mint-nft:
-	@forge script ./script/MintNft.s.sol ${NFT_MINTER_ADDRESS} ${PROMPT} --sig "run(address,string)" --rpc-url $(RPC_URL) --broadcast -v 4
+	@forge script ./script/MintNft.s.sol ${NFT_MINTER_ADDRESS} "${PROMPT}" --sig "run(address,string)" --rpc-url $(RPC_URL) --broadcast -v 4
 
 ## update-nft: updating the NFT | PROMPT,NFT_MINTER_ADDRESS, RPC_URL
 update-nft:
-	@forge script ./script/UpdateNft.s.sol ${NFT_ADDRESS} ${TOKEN_ID} ${PROMPT} --sig "run(address,uint256,string)" --rpc-url $(RPC_URL) --broadcast -v 4
+	@forge script ./script/UpdateNft.s.sol ${NFT_ADDRESS} ${TOKEN_ID} "${PROMPT}" --sig "run(address,uint256,string)" --rpc-url $(RPC_URL) --broadcast -v 4
 
 ## show-nft: showing the NFT | NFT_ADDRESS, NFT_MINTER_ADDRESS, RPC_URL
 show-nft:

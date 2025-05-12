@@ -25,14 +25,11 @@ contract MintNft is Common {
         vm.startBroadcast(_privateKey);
 
         // Trigger the minter contract
-        minter.triggerMint{value: 0.1 ether}(_prompt);
+        IWavsNftServiceTypes.TriggerId triggerId = minter.triggerMint{
+            value: 0.1 ether
+        }(_prompt);
 
         vm.stopBroadcast();
-
-        // Get the trigger ID (it will be 0 for the first trigger)
-        IWavsNftServiceTypes.TriggerId triggerId = IWavsNftServiceTypes
-            .TriggerId
-            .wrap(0);
 
         // Fetch and log the trigger metadata
         WavsMinter.Receipt memory metadata = minter.getTrigger(triggerId);
