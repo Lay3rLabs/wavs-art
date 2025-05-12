@@ -78,7 +78,7 @@ function new_workflow() {
     local digest=`COMPONENT_FILENAME=${component_filename} make --no-print-directory upload-component | cut -d':' -f2`
     $BASE_CMD workflow component --id ${workflow_id} set-source-digest --digest ${digest} > /dev/null
     $BASE_CMD workflow component --id ${workflow_id} permissions --http-hosts '*' --file-system true > /dev/null
-    $BASE_CMD workflow component --id ${workflow_id} time-limit --seconds 1800 > /dev/null
+    $BASE_CMD workflow component --id ${workflow_id} time-limit --seconds 60 > /dev/null
     if [ -n "${env_vars}" ]; then
         $BASE_CMD workflow component --id ${workflow_id} env --values ${env_vars} > /dev/null
     fi

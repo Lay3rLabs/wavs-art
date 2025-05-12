@@ -96,7 +96,8 @@ gas_denom = "untrn"
 # Registry domain
 registry_domain = "wa.dev"
 
-max_execution_seconds = 1800
+# global max for all components. default is 90 seconds
+# max_execution_seconds = 90
 
 cors_allowed_origins = [
     "https://lay3rlabs.github.io/*",
