@@ -44,7 +44,7 @@ contract ClaimRewards is Common {
 
         if (root == avsOutput.root && ipfsHash == avsOutput.ipfsHashData) {
             console.log(
-                "Trigger executed successfully, root and ipfsHash match."
+                "Trigger executed successfully, root and ipfsHash match. This means the last rewards update occurred due to a manual trigger."
             );
             console.log("");
             console.log("--------------------------------");
@@ -57,7 +57,7 @@ contract ClaimRewards is Common {
             console.log("--------------------------------");
             console.log("");
         } else {
-            console.log("Trigger failed, root or ipfsHash mismatch");
+            console.log("Trigger failed, root or ipfsHash mismatch. This will happen if the last rewards update occurred due to a cron schedule and not a manual trigger.");
             console.log("");
             console.log("--------------------------------");
             console.log("");
@@ -84,7 +84,7 @@ contract ClaimRewards is Common {
 
         // access IPFS_GATEWAY_URL from env
         string memory ipfsGatewayUrl = vm.envString("IPFS_GATEWAY_URL");
-        string memory url = string.concat(ipfsGatewayUrl, avsOutput.ipfsHash);
+        string memory url = string.concat(ipfsGatewayUrl, ipfsHash);
 
         console.log("Merkle data URL: ", url);
         console.log("Claiming rewards...");
