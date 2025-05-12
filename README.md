@@ -154,7 +154,7 @@ PROMPT="mystical governance" make mint-nft
 ### Update NFT
 
 ```bash
-PROMPT="natural governance" make update-nft
+PROMPT="natural governance" TOKEN_ID=0 make update-nft
 ```
 
 ### Show NFT

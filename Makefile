@@ -9,10 +9,10 @@ REWARD_DISTRIBUTOR_ADDR?=`jq -r '.reward_distributor' "./.docker/script_deploy.j
 REWARD_TOKEN_ADDRESS?=`jq -r '.reward_token' .docker/script_deploy.json`
 NFT_MINTER_ADDRESS?=`jq -r '.minter' .docker/script_deploy.json`
 NFT_ADDRESS?=`jq -r '.nft' .docker/script_deploy.json`
-DEFAULT_PROMPT="mystical governance"
-AGGREGATOR_URL?=http://127.0.0.1:8001
+PROMPT?="mystical governance"
 
 # Define common variables
+AGGREGATOR_URL?=http://127.0.0.1:8001
 ANVIL_PRIVATE_KEY?=0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
 CARGO=cargo
 COIN_MARKET_CAP_ID?=1
@@ -95,11 +95,11 @@ build-service:
 
 ## mint-nft: minting the NFT | PROMPT,NFT_MINTER_ADDRESS, RPC_URL
 mint-nft:
-	@forge script ./script/MintNft.s.sol ${NFT_MINTER_ADDRESS} ${PROMPT:=${DEFAULT_PROMPT}} --sig "run(address,string)" --rpc-url $(RPC_URL) --broadcast -v 4
+	@forge script ./script/MintNft.s.sol ${NFT_MINTER_ADDRESS} ${PROMPT} --sig "run(address,string)" --rpc-url $(RPC_URL) --broadcast -v 4
 
 ## update-nft: updating the NFT | PROMPT,NFT_MINTER_ADDRESS, RPC_URL
 update-nft:
-	@forge script ./script/UpdateNft.s.sol ${NFT_ADDRESS} ${TOKEN_ID} ${PROMPT:=${DEFAULT_PROMPT}} --sig "run(address,uint256,string)" --rpc-url $(RPC_URL) --broadcast -v 4
+	@forge script ./script/UpdateNft.s.sol ${NFT_ADDRESS} ${TOKEN_ID} ${PROMPT} --sig "run(address,uint256,string)" --rpc-url $(RPC_URL) --broadcast -v 4
 
 ## show-nft: showing the NFT | NFT_ADDRESS, NFT_MINTER_ADDRESS, RPC_URL
 show-nft:
