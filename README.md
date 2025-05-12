@@ -136,7 +136,7 @@ make build
 make start
 
 # no GPU, use CPU instead (very slow)
-DOCKER_COMPOSE_FILE=docker-compose.cpu.yml make start
+make start-cpu
 ```
 
 ### Deploy contracts/services

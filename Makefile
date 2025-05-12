@@ -77,6 +77,10 @@ setup: check-requirements
 start:
 	@bash ./script/start.sh
 
+## start-cpu: run start script with CPU only (no GPU)
+start-cpu:
+	@DOCKER_COMPOSE_FILE=docker-compose.cpu.yml bash ./script/start.sh
+
 ## deploy: run deploy script
 deploy:
 	@bash ./script/deploy.sh
