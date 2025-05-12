@@ -40,7 +40,7 @@ AUTONOMOUS_ARTIST_SIMPLE_RELAY_TRIGGER_EVENT="WavsNftMint(address,uint256,string
 
 # === Core ===
 
-BASE_CMD="docker run --rm --network host -w /data -v $(pwd):/data ghcr.io/lay3rlabs/wavs:0.4.0-beta.1 wavs-cli service --json true --home /data --file /data/${FILE_LOCATION}"
+BASE_CMD="docker run --rm --network host -w /data -v $(pwd):/data ghcr.io/lay3rlabs/wavs:0.4.0-beta.2 wavs-cli service --json true --home /data --file /data/${FILE_LOCATION}"
 
 SERVICE_ID=`$BASE_CMD init --name demo | jq -r .id`
 echo "Service ID: ${SERVICE_ID}"

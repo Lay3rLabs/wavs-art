@@ -3,7 +3,7 @@
 set -e
 
 PORT=8545
-MIDDLEWARE_IMAGE=ghcr.io/lay3rlabs/wavs-middleware:0.4.0-beta.1
+MIDDLEWARE_IMAGE=ghcr.io/lay3rlabs/wavs-middleware:0.4.0-beta.2
 LOG_FILE=.docker/start.log
 OPERATOR_PK=${OPERATOR_PK:-""}
 OPERATOR_MNEMONIC=${OPERATOR_MNEMONIC:-""}
@@ -11,10 +11,6 @@ export DOCKER_DEFAULT_PLATFORM=linux/amd64
 
 ## == Start watcher ==
 rm $LOG_FILE 2> /dev/null || true
-
-## == Start ipfs, ollama, sd-api, and download-sd1.5 first ==
-docker compose up ipfs ollama download-sd1.5 sd-api --remove-orphans &
-echo "Started ipfs, ollama, download-sd1.5, and sd-api services"
 
 ## == Base Anvil Testnet Fork ==
 anvil --fork-url https://ethereum-holesky-rpc.publicnode.com --port ${PORT} &
@@ -53,7 +49,7 @@ sed -i${SP}'' -e "s/^WAVS_AGGREGATOR_CREDENTIAL=.*$/WAVS_AGGREGATOR_CREDENTIAL=\
 sed -i${SP}'' -e "s/^WAVS_SUBMISSION_MNEMONIC=.*$/WAVS_SUBMISSION_MNEMONIC=\"$OPERATOR_MNEMONIC\"/" .env
 
 # == WAVS & Aggregator ==
-docker compose up wavs aggregator --remove-orphans &
+docker compose up --remove-orphans &
 trap "docker compose down && echo -e '\nKilled WAVS'" EXIT
 
 # fin

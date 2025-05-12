@@ -4,7 +4,7 @@ resolver = "2"
 
 [workspace.package]
 edition = "2021"
-version = "0.4.0-beta.1"
+version = "0.4.0-beta.2"
 license = "MIT"
 authors = ["Lay3r Labs Team"]
 repository = "https://github.com/Lay3rLabs/wavs"
@@ -12,11 +12,11 @@ rust-version = "1.80.0"
 
 [workspace.dependencies]
 # WASI
-wit-bindgen-rt = { version = "0.39.0", features = ["bitflags"] }
+wit-bindgen-rt = { version = "0.39.0", features = ["bitflags", "async"] }
 wit-bindgen = "0.41.0"
 wstd = "0.5.3"
 wasi = "0.14.1"
-wavs-wasi-utils = "=0.4.0-beta.1"
+wavs-wasi-utils = "=0.4.0-beta.2"
 
 # Other
 serde = { version = "1.0.219", features = ["derive"] }
@@ -26,14 +26,17 @@ anyhow = "1.0.98"
 ## Alloy
 alloy-sol-macro = { version = "1.1.0", features = ["json"] }
 alloy-sol-types = "1.1.0"
-alloy-network = "0.14.0"
-alloy-provider = { version = "0.14.0", default-features = false, features = [
+alloy-network = "0.15.10"
+alloy-provider = { version = "0.15.10", default-features = false, features = [
     "rpc-api",
 ] }
-alloy-rpc-types = "0.14.0"
+alloy-rpc-types = "0.15.10"
 
 ## IPFS
 cid = "0.7"
 multibase = "0.9"
 multihash = "0.18"
 bs58 = "0.5"       # For decoding v0 CIDs
+
+# TODO these are under active development, replace with `wavs-tools` repo when done
+wavs-llm = { git = "https://github.com/Lay3rLabs/wavs-safe", branch = "wit-refactor-0.4.0" }

@@ -30,8 +30,7 @@ multibase = { workspace = true }
 multihash = { workspace = true }
 bs58 = { workspace = true }
 
-# TODO these are under active development, replace with `wavs-tools` repo when done
-wavs-llm = { git = "https://github.com/Lay3rLabs/wavs-safe", branch = "WITty-refactor-0.4.0-beta.1" }
+wavs-llm = { workspace = true }
 
 [dev-dependencies]
 mockall = "0.11"
@@ -48,4 +47,4 @@ lto = true
 
 [package.metadata.component]
 package = "component:autonomous-artist"
-target = "wavs:worker/layer-trigger-world@0.4.0-beta.1"
+target = "wavs:worker/layer-trigger-world@0.4.0-beta.2"
