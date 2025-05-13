@@ -8,7 +8,6 @@ LOG_FILE=.docker/start.log
 OPERATOR_PK=${OPERATOR_PK:-""}
 OPERATOR_MNEMONIC=${OPERATOR_MNEMONIC:-""}
 DOCKER_COMPOSE_FILE=${DOCKER_COMPOSE_FILE:-"docker-compose.yml"}
-export DOCKER_DEFAULT_PLATFORM=linux/amd64
 
 ## == Start watcher ==
 rm $LOG_FILE 2> /dev/null || true

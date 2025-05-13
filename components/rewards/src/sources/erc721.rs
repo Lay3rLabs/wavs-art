@@ -76,7 +76,7 @@ impl Erc721Source {
         let provider: RootProvider<Ethereum> =
             new_evm_provider::<Ethereum>(chain_config.http_endpoint.unwrap());
 
-        let holders_call = IRewardSourceERC721::getAllOwnersCall {};
+        let holders_call = IRewardSourceNft::getAllOwnersCall {};
         let tx = alloy_rpc_types::eth::TransactionRequest {
             to: Some(TxKind::Call(self.address)),
             input: TransactionInput { input: Some(holders_call.abi_encode().into()), data: None },
@@ -94,7 +94,7 @@ sol! {
     interface IERC721 {
         function balanceOf(address owner) external view returns (uint256);
     }
-    interface IRewardSourceERC721 {
+    interface IRewardSourceNft {
         function getAllOwners() external view returns (address[] memory);
     }
 }

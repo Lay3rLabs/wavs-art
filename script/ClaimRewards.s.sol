@@ -7,7 +7,6 @@ import {console} from "forge-std/console.sol";
 import {Common} from "script/Common.s.sol";
 
 import {RewardDistributor} from "contracts/RewardDistributor.sol";
-import {RewardSourceERC721} from "contracts/RewardSourceERC721.sol";
 import {RewardToken} from "contracts/RewardToken.sol";
 import {ITypes} from "interfaces/ITypes.sol";
 

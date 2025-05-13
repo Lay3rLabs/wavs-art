@@ -10,7 +10,6 @@ SUBMIT_CHAIN=${SUBMIT_CHAIN:-"local"}
 AGGREGATOR_URL=${AGGREGATOR_URL:-"http://127.0.0.1:8001"}
 # used in make upload-component
 WAVS_ENDPOINT=${WAVS_ENDPOINT:-"http://localhost:8000"}
-export DOCKER_DEFAULT_PLATFORM=linux/amd64
 
 SERVICE_MANAGER_ADDR=`jq -r .addresses.WavsServiceManager .nodes/avs_deploy.json`
 
