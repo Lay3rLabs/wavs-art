@@ -138,7 +138,7 @@ operator-register:
 		echo "Error: AVS_PRIVATE_KEY is not set. Please set it to your AVS private key."; \
 		exit 1; \
 	fi
-	@docker run --rm --network host --env-file ${ENV_FILE} -v ./.nodes:/root/.nodes --entrypoint /wavs/register.sh ${MIDDLEWARE_DOCKER_IMAGE} "${AVS_PRIVATE_KEY}"
+	@docker run --rm --network host --env-file ${ENV_FILE} -v ./.nodes:/root/.nodes --entrypoint /wavs/register.sh ${MIDDLEWARE_DOCKER_IMAGE} "${AVS_PRIVATE_KEY}" 0.001ether
 
 ## update-submodules: update the git submodules
 update-submodules:
