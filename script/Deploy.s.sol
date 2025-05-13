@@ -37,7 +37,7 @@ contract DeployScript is Common {
 
         // Mint reward tokens for the distributor.
         RewardToken rewardToken = new RewardToken();
-        rewardToken.mint{value: 1000 ether}(address(rewardDistributor));
+        rewardToken.mint{value: 0.1 ether}(address(rewardDistributor));
 
         // Deploy the NFT contract
         WavsNft nft = new WavsNft(
