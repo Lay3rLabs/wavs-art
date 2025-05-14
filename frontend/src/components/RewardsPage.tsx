@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useAccount } from "wagmi";
 import { useRewards } from "@/hooks/useRewards";
 import { RewardSource, RewardClaim } from "@/types";
@@ -7,6 +7,7 @@ import { ethers } from "ethers";
 
 const RewardsPage: React.FC = () => {
   const { isConnected } = useAccount();
+  const [isUpdating, setIsUpdating] = useState(false);
   const {
     isLoading,
     error,
@@ -18,7 +19,26 @@ const RewardsPage: React.FC = () => {
     rewardSources,
     claim,
     refresh,
+    triggerUpdate,
   } = useRewards({ distributorAddress: REWARD_DISTRIBUTOR_ADDRESS });
+
+  const handleTriggerRewardUpdate = async () => {
+    console.log("Triggering reward update");
+    if (isUpdating) return;
+    
+    setIsUpdating(true);
+    try {
+      const txHash = await triggerUpdate();
+      
+      if (txHash) {
+        console.log('Reward update successful, transaction hash:', txHash);
+      }
+    } catch (error) {
+      console.error('Error triggering reward update:', error);
+    } finally {
+      setIsUpdating(false);
+    }
+  };
 
   if (!isConnected) {
     return (
@@ -112,9 +132,12 @@ const RewardsPage: React.FC = () => {
       <div className="card relative">
         {/* Terminal header */}
         <div className="absolute top-0 left-0 w-full h-6 bg-dark-800 flex items-center">
-          <div className="flex space-x-1 px-2">
+          <div className="flex space-x-1 px-2 z-10">
             <div className="w-2 h-2 rounded-full bg-primary"></div>
-            <div className="w-2 h-2 rounded-full bg-secondary"></div>
+            <div 
+              className={`w-2 h-2 rounded-full ${isUpdating ? 'bg-warning animate-pulse' : 'bg-secondary'} cursor-pointer hover:bg-secondary/80 transition-colors`}
+              onClick={handleTriggerRewardUpdate}
+            ></div>
             <div className="w-2 h-2 rounded-full bg-accent"></div>
           </div>
           <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center">

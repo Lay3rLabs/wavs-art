@@ -5,7 +5,7 @@ import React, {
   useEffect,
   ReactNode,
 } from "react";
-import { useAccount, usePublicClient, useWalletClient } from "wagmi";
+import { useAccount, usePublicClient } from "wagmi";
 import { ContractTransactionResponse, ethers } from "ethers";
 import { DEFAULT_MINT_PRICE, IPFS_GATEWAY_URL } from "../constants";
 import {
@@ -63,7 +63,6 @@ export const MintProvider: React.FC<MintProviderProps> = ({ children }) => {
 
   const { address, isConnected } = useAccount();
   const publicClient = usePublicClient();
-  const { data: walletClient } = useWalletClient();
 
   // Get the mint price from the contract
   const loadMintPrice = async () => {
@@ -215,7 +214,7 @@ export const MintProvider: React.FC<MintProviderProps> = ({ children }) => {
 
   // Trigger a new mint
   const triggerMint = async (prompt: string): Promise<string | null> => {
-    if (!address || !isConnected || !walletClient || !publicClient) return null;
+    if (!address || !isConnected || !publicClient) return null;
 
     // Create contract instance with ethers
     const { provider, signer } = await getBrowserProviderWalletSigner();

@@ -16,6 +16,8 @@ import {
   RewardClaim,
   RewardSource,
 } from "@/types";
+import { ethers } from "ethers";
+import { getBrowserProviderWalletSigner } from "@/utils/clients";
 
 interface UseRewardsProps {
   distributorAddress: `0x${string}`;
@@ -60,6 +62,50 @@ export function useRewards({ distributorAddress }: UseRewardsProps) {
       setIsLoading(false);
     }
   }, [distributorAddress]);
+
+  // Trigger a reward update by calling addTrigger on the distributor contract
+  const triggerUpdate = useCallback(async (): Promise<string | null> => {
+    if (!isConnected) {
+      setError("Cannot update rewards: wallet not connected");
+      return null;
+    }
+
+    try {
+      setError(null);
+      setIsLoading(true);
+
+      // Get signer
+      const { signer } = await getBrowserProviderWalletSigner();
+      
+      // RewardDistributor ABI - just the function we need
+      const rewardDistributorABI = [
+        "function addTrigger() external returns (uint256)"
+      ];
+
+      // Connect to the contract
+      const contract = new ethers.Contract(
+        distributorAddress,
+        rewardDistributorABI,
+        signer
+      );
+
+      console.log("Triggering reward update...");
+      
+      // Call addTrigger function
+      const tx = await contract.addTrigger();
+      const receipt = await tx.wait();
+      
+      console.log("Reward update triggered successfully:", receipt.hash);
+      
+      return receipt.hash;
+    } catch (err: any) {
+      console.error("Error triggering reward update:", err);
+      setError(`Failed to update rewards: ${err.message || "Unknown error"}`);
+      return null;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [isConnected, distributorAddress, loadInitialData]);
 
   // Fetch merkle tree data from IPFS
   const fetchMerkleData = useCallback(async () => {
@@ -273,5 +319,6 @@ export function useRewards({ distributorAddress }: UseRewardsProps) {
     rewardSources,
     claim,
     refresh: loadInitialData,
+    triggerUpdate,
   };
 }
