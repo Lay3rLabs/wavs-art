@@ -7,7 +7,7 @@ import React, {
 } from "react";
 import { useAccount, usePublicClient, useWalletClient } from "wagmi";
 import { ContractTransactionResponse, ethers } from "ethers";
-import { DEFAULT_MINT_PRICE } from "../constants";
+import { DEFAULT_MINT_PRICE, IPFS_GATEWAY_URL } from "../constants";
 import {
   getBrowserProviderWalletSigner,
   getMinterContract,
@@ -180,7 +180,7 @@ export const MintProvider: React.FC<MintProviderProps> = ({ children }) => {
           const metadataUrl = isIpfs
             ? tokenURI.replace(
                 "ipfs://",
-                "https://gateway.lighthouse.storage/ipfs/"
+                IPFS_GATEWAY_URL
               )
             : tokenURI;
 
@@ -191,7 +191,7 @@ export const MintProvider: React.FC<MintProviderProps> = ({ children }) => {
             imageUrl = metadata.image.startsWith("ipfs://")
               ? metadata.image.replace(
                   "ipfs://",
-                  "https://gateway.lighthouse.storage/ipfs/"
+                  IPFS_GATEWAY_URL
                 )
               : metadata.image;
           }

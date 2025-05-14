@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useMint } from '../contexts/MintContext';
+import { IPFS_GATEWAY_URL } from '@/constants';
 
 const NFTDetailPage: React.FC = () => {
   const { tokenId } = useParams<{ tokenId: string }>();
@@ -139,7 +140,7 @@ const NFTDetailPage: React.FC = () => {
                   </div>
                   <div>IPFS::{nft.tokenURI.substring(0, 20)}...</div>
                   <a 
-                    href={nft.tokenURI.replace("ipfs://", "https://gateway.lighthouse.storage/ipfs/")}
+                    href={nft.tokenURI.replace("ipfs://", IPFS_GATEWAY_URL)}
                     target="_blank"
                     rel="noopener noreferrer" 
                     className="text-accent hover:underline"

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useMint } from "../contexts/MintContext";
 import { useAccount } from "wagmi";
+import { IPFS_GATEWAY_URL } from "@/constants";
 
 // Assuming it takes approximately 40 seconds to generate an NFT
 const ESTIMATED_GENERATION_TIME = 40000; // 40 seconds in milliseconds
@@ -490,7 +491,7 @@ const NFTGallery: React.FC = () => {
                               window.open(
                                 nft.tokenURI.replace(
                                   "ipfs://",
-                                  "https://gateway.lighthouse.storage/ipfs/"
+                                  IPFS_GATEWAY_URL
                                 ),
                                 "_blank"
                               );
