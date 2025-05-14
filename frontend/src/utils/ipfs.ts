@@ -5,6 +5,7 @@ import { sha256 } from 'multiformats/hashes/sha2';
 import * as Digest from 'multiformats/hashes/digest';
 import { toString as uint8ArrayToString, fromString as uint8ArrayFromString } from 'uint8arrays';
 import { Buffer } from 'buffer';
+import { IPFS_GATEWAY_URL } from '@/constants';
 
 /**
  * Converts a bytes32 digest hex string from a contract to a proper IPFS CID in
@@ -94,17 +95,10 @@ export function normalizeCid(hash: string): string {
 
 /**
  * Converts a CID to a URL for fetching the content
- * Uses the local API proxy to avoid CORS issues with direct IPFS gateway access
  */
 export function cidToUrl(cid: string): string {
   const normalizedCid = normalizeCid(cid);
-  
-  // Use the local API proxy instead of directly accessing the IPFS gateway
-  // This helps avoid CORS issues and provides better caching
-  return `/api/ipfs/${normalizedCid}`;
-  
-  // Direct gateway access (leave for reference, may have CORS issues)
-  // return `${IPFS_GATEWAY}${normalizedCid}`;
+  return IPFS_GATEWAY_URL + normalizedCid;
 }
 
 /**
