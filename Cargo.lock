@@ -103,6 +103,27 @@ dependencies = [
 ]
 
 [[package]]
+name = "alloy-contract"
+version = "0.15.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9668ce1176f0b87a5e5fc805b3d198954f495de2e99b70a44bed691ba2b0a9d8"
+dependencies = [
+ "alloy-consensus",
+ "alloy-dyn-abi",
+ "alloy-json-abi",
+ "alloy-network",
+ "alloy-network-primitives",
+ "alloy-primitives",
+ "alloy-provider",
+ "alloy-rpc-types-eth",
+ "alloy-sol-types",
+ "alloy-transport",
+ "futures",
+ "futures-util",
+ "thiserror 2.0.12",
+]
+
+[[package]]
 name = "alloy-dyn-abi"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4106,6 +4127,7 @@ dependencies = [
 name = "rewards"
 version = "0.4.0-beta.2"
 dependencies = [
+ "alloy-contract",
  "alloy-network",
  "alloy-provider",
  "alloy-rpc-types",

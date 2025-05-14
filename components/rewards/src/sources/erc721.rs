@@ -1,13 +1,12 @@
 use crate::bindings::host::get_evm_chain_config;
 use alloy_network::Ethereum;
-use alloy_provider::{Provider, RootProvider};
-use alloy_rpc_types::TransactionInput;
-use alloy_sol_types::{sol, SolCall, SolType};
+use alloy_provider::RootProvider;
+use alloy_sol_types::sol;
 use anyhow::Result;
 use async_trait::async_trait;
-use std::str::FromStr;
+use std::{collections::HashSet, str::FromStr};
 use wavs_wasi_utils::evm::{
-    alloy_primitives::{Address, TxKind, U256},
+    alloy_primitives::{Address, U256},
     new_evm_provider,
 };
 
@@ -59,16 +58,10 @@ impl Erc721Source {
         let provider: RootProvider<Ethereum> =
             new_evm_provider::<Ethereum>(chain_config.http_endpoint.unwrap());
 
-        let balance_call = IERC721::balanceOfCall { owner };
-        let tx = alloy_rpc_types::eth::TransactionRequest {
-            to: Some(TxKind::Call(self.address)),
-            input: TransactionInput { input: Some(balance_call.abi_encode().into()), data: None },
-            ..Default::default()
-        };
+        let contract = ERC721::new(self.address, &provider);
+        let balance = contract.balanceOf(owner).call().await?;
 
-        let result = provider.call(tx).await?;
-
-        Ok(U256::from_be_slice(&result))
+        Ok(balance)
     }
 
     async fn query_holders(&self) -> Result<Vec<String>> {
@@ -76,25 +69,28 @@ impl Erc721Source {
         let provider: RootProvider<Ethereum> =
             new_evm_provider::<Ethereum>(chain_config.http_endpoint.unwrap());
 
-        let holders_call = IRewardSourceNft::getAllOwnersCall {};
-        let tx = alloy_rpc_types::eth::TransactionRequest {
-            to: Some(TxKind::Call(self.address)),
-            input: TransactionInput { input: Some(holders_call.abi_encode().into()), data: None },
-            ..Default::default()
-        };
+        let mut owners = HashSet::new();
 
-        let result = provider.call(tx).await?.to_vec();
+        let contract = ERC721::new(self.address, &provider);
+        let total_supply = contract.totalSupply().call().await?;
 
-        let holders: Vec<Address> = <sol! { address[] }>::abi_decode(&result)?;
-        Ok(holders.into_iter().map(|h| h.to_string()).collect())
+        let mut i = U256::ZERO;
+        while i < total_supply {
+            let owner = contract.ownerOfTokenByIndex(i).call().await?.to_string();
+            owners.insert(owner);
+
+            i += U256::ONE;
+        }
+
+        Ok(owners.into_iter().collect())
     }
 }
 
 sol! {
-    interface IERC721 {
+    #[sol(rpc)]
+    contract ERC721 {
         function balanceOf(address owner) external view returns (uint256);
-    }
-    interface IRewardSourceNft {
-        function getAllOwners() external view returns (address[] memory);
+        function totalSupply() external view returns (uint256);
+        function ownerOfTokenByIndex(uint256 index) external view returns (address);
     }
 }

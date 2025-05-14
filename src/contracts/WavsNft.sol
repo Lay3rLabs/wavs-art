@@ -268,17 +268,13 @@ contract WavsNft is
     }
 
     /**
-     * @notice Returns an array of all NFT owners
-     * @return An array of all NFT owners
+     * @notice Returns the owner of the NFT at a given index
+     * @param index The index of the NFT
+     * @return The owner of the NFT
      */
-    function getAllOwners() external view returns (address[] memory) {
-        uint256 totalSupply = totalSupply();
-        address[] memory owners = new address[](totalSupply);
-
-        for (uint256 i = 0; i < totalSupply; i++) {
-            owners[i] = ownerOf(tokenByIndex(i));
-        }
-
-        return owners;
+    function ownerOfTokenByIndex(
+        uint256 index
+    ) external view returns (address) {
+        return ownerOf(tokenByIndex(index));
     }
 }
