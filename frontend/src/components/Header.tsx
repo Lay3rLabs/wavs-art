@@ -28,7 +28,7 @@ const Header: React.FC = () => {
           <span className="">A</span>
           <span className="crt-flicker">V</span>
           <span className="">S::</span>
-          <span className="text-primary ml-2">NFT</span>
+          <span className="text-primary ml-2">ART</span>
           <span className="bg-dark-800 text-secondary px-2 ml-2 text-sm">
             v1.0
           </span>

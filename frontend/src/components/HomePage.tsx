@@ -23,7 +23,7 @@ const HomePage: React.FC = () => {
           <div className="text-center mb-12 relative">
             <div className="inline-block relative">
               <h1 className="text-4xl font-glitch mb-4 relative z-10 tracking-wider">
-                <span className="crt-flicker text-primary">DYNAMIC</span>
+                <span className="crt-flicker text-primary">AI</span>
                 <span className="text-accent">AVS</span>
                 <span className="text-secondary">NFTS</span>
               </h1>
@@ -31,7 +31,7 @@ const HomePage: React.FC = () => {
             </div>
 
             <p className="pt-4 text-primary/70 max-w-2xl mx-auto font-mono text-sm">
-              GENERATE SECURE || AUTONOMOUS || DECENTRALIZED ASSETS
+              DYNAMIC || AUTONOMOUS || DECENTRALIZED ASSETS
               <br />
               {/* <span className="text-xs text-primary/50">
                 ALL TRANSACTIONS ENCRYPTED • IMMUTABLE STORAGE • HIGH ENTROPY
