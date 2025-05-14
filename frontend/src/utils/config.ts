@@ -40,8 +40,6 @@ export const { chains, publicClient, webSocketPublicClient } = configureChains(
   ]
 );
 
-console.log("Chains:", chains, _chains);
-
 const { wallets } = getDefaultWallets({
   appName: 'WAVS Art',
   projectId: 'YOUR_WALLETCONNECT_PROJECT_ID', // Replace with your WalletConnect project ID in production
