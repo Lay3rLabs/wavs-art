@@ -74,13 +74,11 @@ services:
       - llm-network
     deploy:
       resources:
-        # reservations:
-        #   devices:
-        #     - driver: nvidia
-        #       count: 1
-        #       capabilities: [gpu]
-        limits:
-          memory: 6G
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
     # command: serve
     # Auto-pull models on startup
     entrypoint: ["/bin/bash", "/entrypoint.sh"]
@@ -104,22 +102,22 @@ services:
       - ./.docker/data_stable-diffusion:/data
     environment:
       # CPU (slow)
-      - CLI_ARGS=--api --skip-install --no-half --precision full --use-cpu all --disable-opt-split-attention --allow-code
+      # - CLI_ARGS=--api --no-half --skip-torch-cuda-test --skip-install
       # GPU
-      # - CLI_ARGS=--api --skip-install --xformers --no-half-vae --allow-code
-      # - NVIDIA_VISIBLE_DEVICES=all # Expose all GPUs to the container [4]
+      - CLI_ARGS=--api --skip-install --xformers --no-half-vae --allow-code
+      - NVIDIA_VISIBLE_DEVICES=all # Expose all GPUs to the container [4]
     networks:
       - llm-network
     deploy:
-      # resources:
-      # limits:
-      #   cpus: '4'
-      #   memory: 16G
-      # reservations:
-      #   devices:
-      #     - driver: nvidia
-      #       count: 1
-      #       capabilities: [gpu]
+      resources:
+        # limits:
+        #   cpus: '4'
+        #   memory: 16G
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
     depends_on:
       - download-sd1.5
 
