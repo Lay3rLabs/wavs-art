@@ -462,6 +462,7 @@ export const MintProvider: React.FC<MintProviderProps> = ({ children }) => {
     const mintFulfilledFilter = minterContract.filters.MintFulfilled();
 
     const handleMintFulfilled = async (triggerId: ethers.BigNumberish) => {
+      console.log("MintFulfilled event received for triggerId:", triggerId);
       const triggerIdStr = triggerId.toString();
 
       // Check if this triggerId matches any of our pending mints
@@ -486,8 +487,11 @@ export const MintProvider: React.FC<MintProviderProps> = ({ children }) => {
 
     minterContract.on(mintFulfilledFilter, handleMintFulfilled);
 
+    console.log("MintFulfilled event listener set up");
+
     return () => {
       minterContract.off(mintFulfilledFilter, handleMintFulfilled);
+      console.log("MintFulfilled event listener removed");
     };
   }, [pendingMints, address, publicClient]);
 
