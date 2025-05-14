@@ -1,5 +1,5 @@
 import { MerkleTreeData, PendingReward } from "@/types";
-import REWARDS_DISTRIBUTOR_ABI from "@/abis/UniversalRewardsDistributor.json";
+import REWARDS_DISTRIBUTOR_ABI from "@/abis/RewardDistributor.json";
 import ERC20_ABI from "@/abis/ERC20.json";
 import WavsNftAbi from "@/abis/WavsNft.json";
 import { getAccount, getPublicClient, writeContract } from "wagmi/actions";

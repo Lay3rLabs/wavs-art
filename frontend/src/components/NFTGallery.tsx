@@ -99,7 +99,7 @@ const ProgressBar: React.FC<{ mint: any }> = ({ mint }) => {
 const NFTGallery: React.FC = () => {
   const { ownedNfts, pendingMints, loadingNfts, refreshNfts } = useMint();
   const { isConnected } = useAccount();
-  const [selectedNft, setSelectedNft] = useState<string | null>(null);
+  const [selectedNft, _setSelectedNft] = useState<string | null>(null);
   const navigate = useNavigate();
 
   if (!isConnected) {

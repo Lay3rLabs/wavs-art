@@ -3,7 +3,7 @@ import { base32 } from 'multiformats/bases/base32';
 import * as raw from 'multiformats/codecs/raw';
 import { sha256 } from 'multiformats/hashes/sha2';
 import * as Digest from 'multiformats/hashes/digest';
-import { toString as uint8ArrayToString, fromString as uint8ArrayFromString } from 'uint8arrays';
+import { fromString as uint8ArrayFromString } from 'uint8arrays';
 import { Buffer } from 'buffer';
 import { IPFS_GATEWAY_URL } from '@/constants';
 
@@ -99,25 +99,6 @@ export function normalizeCid(hash: string): string {
 export function cidToUrl(cid: string): string {
   const normalizedCid = normalizeCid(cid);
   return IPFS_GATEWAY_URL + normalizedCid;
-}
-
-/**
- * Convert hex string to Uint8Array
- */
-function hexToBytes(hex: string): Uint8Array {
-  const bytes = new Uint8Array(Math.floor(hex.length / 2));
-  for (let i = 0; i < bytes.length; i++) {
-    const hexByte = hex.substring(i * 2, i * 2 + 2);
-    bytes[i] = parseInt(hexByte, 16);
-  }
-  return bytes;
-}
-
-/**
- * Convert hex string to UTF-8 string
- */
-function hexToUtf8(hex: string): string {
-  return uint8ArrayToString(hexToBytes(hex), 'utf-8');
 }
 
 /**

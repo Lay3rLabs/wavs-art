@@ -17,7 +17,10 @@ import {
   RewardSource,
 } from "@/types";
 import { ethers } from "ethers";
-import { getBrowserProviderWalletSigner } from "@/utils/clients";
+import {
+  getBrowserProviderWalletSigner,
+  getDistributorContract,
+} from "@/utils/clients";
 
 interface UseRewardsProps {
   distributorAddress: `0x${string}`;
@@ -45,9 +48,7 @@ export function useRewards({ distributorAddress }: UseRewardsProps) {
       setIsLoading(true);
       console.log("Fetching reward state from contract:", distributorAddress);
 
-      const { ipfsHash, root } = await fetchRewardState(
-        distributorAddress
-      );
+      const { ipfsHash, root } = await fetchRewardState(distributorAddress);
 
       if (ipfsHash && root) {
         setCurrentIpfsHash(ipfsHash);
@@ -76,10 +77,10 @@ export function useRewards({ distributorAddress }: UseRewardsProps) {
 
       // Get signer
       const { signer } = await getBrowserProviderWalletSigner();
-      
+
       // RewardDistributor ABI - just the function we need
       const rewardDistributorABI = [
-        "function addTrigger() external returns (uint256)"
+        "function addTrigger() external returns (uint256)",
       ];
 
       // Connect to the contract
@@ -90,13 +91,13 @@ export function useRewards({ distributorAddress }: UseRewardsProps) {
       );
 
       console.log("Triggering reward update...");
-      
+
       // Call addTrigger function
       const tx = await contract.addTrigger();
       const receipt = await tx.wait();
-      
+
       console.log("Reward update triggered successfully:", receipt.hash);
-      
+
       return receipt.hash;
     } catch (err: any) {
       console.error("Error triggering reward update:", err);
@@ -278,6 +279,30 @@ export function useRewards({ distributorAddress }: UseRewardsProps) {
     console.log("Fetching trigger info on component mount");
     loadInitialData();
   }, [loadInitialData]);
+
+  // Listen for RewardsUpdate events
+  useEffect(() => {
+    if (!distributorAddress) return;
+
+    // Get contract instance using the utility
+    const contract = getDistributorContract(distributorAddress);
+
+    const rewardsUpdateFilter = contract.filters.RewardsUpdate();
+
+    // Set up event listener
+    const handleRewardsUpdate = async () => {
+      console.log("RewardsUpdate event received, reloading data...");
+      await loadInitialData();
+    };
+
+    // Listen for the event
+    contract.on(rewardsUpdateFilter, handleRewardsUpdate);
+
+    // Cleanup
+    return () => {
+      contract.off(rewardsUpdateFilter, handleRewardsUpdate);
+    };
+  }, [distributorAddress, loadInitialData]);
 
   // Load merkle data when ipfsHash changes
   useEffect(() => {

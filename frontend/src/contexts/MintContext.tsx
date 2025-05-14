@@ -457,7 +457,7 @@ export const MintProvider: React.FC<MintProviderProps> = ({ children }) => {
   // Set up event listeners for MintFulfilled events
   useEffect(() => {
     const minterContract = getMinterContract();
-    if (!address || !publicClient) return;
+    if (!address) return;
 
     const mintFulfilledFilter = minterContract.filters.MintFulfilled();
 
@@ -490,12 +490,12 @@ export const MintProvider: React.FC<MintProviderProps> = ({ children }) => {
     return () => {
       minterContract.off(mintFulfilledFilter, handleMintFulfilled);
     };
-  }, [pendingMints, address, publicClient]);
+  }, [pendingMints, address]);
 
   // Listen for NFT mint events to refresh owned NFTs
   useEffect(() => {
     const nftContract = getNftContract();
-    if (!nftContract || !address || !publicClient) return;
+    if (!nftContract || !address) return;
 
     const wavsNftMintFilter = nftContract.filters.WavsNftMint(address);
 
@@ -508,7 +508,7 @@ export const MintProvider: React.FC<MintProviderProps> = ({ children }) => {
     return () => {
       nftContract.off(wavsNftMintFilter, handleNftMint);
     };
-  }, [address, publicClient]);
+  }, [address]);
 
   // Load initial data
   useEffect(() => {

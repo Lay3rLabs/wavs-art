@@ -1,7 +1,7 @@
 import { ethers } from "ethers";
 import WavsNftABI from "@/abis/WavsNft.json";
 import WavsMinterABI from "../abis/WavsMinter.json";
-import REWARDS_DISTRIBUTOR_ABI from "@/abis/UniversalRewardsDistributor.json";
+import REWARDS_DISTRIBUTOR_ABI from "@/abis/RewardDistributor.json";
 import { getNetwork, getWalletClient } from "wagmi/actions";
 import {
   NFT_CONTRACT_ADDRESS,
