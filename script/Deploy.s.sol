@@ -35,9 +35,8 @@ contract DeployScript is Common {
             IWavsServiceManager(serviceManager)
         );
 
-        // Mint reward tokens for the distributor.
-        RewardToken rewardToken = new RewardToken();
-        rewardToken.mint{value: 1000 ether}(address(rewardDistributor));
+        // Create the reward token and let the reward distributor mint tokens.
+        RewardToken rewardToken = new RewardToken(address(rewardDistributor));
 
         // Deploy the NFT contract
         WavsNft nft = new WavsNft(
