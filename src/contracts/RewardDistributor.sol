@@ -35,6 +35,9 @@ contract RewardDistributor is
     /// @notice The optional ipfs hash CID containing metadata about the root (e.g. the merkle tree itself).
     string public ipfsHashCid;
 
+    // Event emitted when a rewards update occurs
+    event RewardsUpdate(TriggerId indexed triggerId);
+
     /**
      * @notice Initialize the contract
      * @param serviceManager The service manager instance
@@ -108,6 +111,8 @@ contract RewardDistributor is
 
         _setRoot(avsOutput.root, avsOutput.ipfsHashData);
         ipfsHashCid = avsOutput.ipfsHash;
+
+        emit RewardsUpdate(dataWithId.triggerId);
     }
 
     function isValidTriggerId(
