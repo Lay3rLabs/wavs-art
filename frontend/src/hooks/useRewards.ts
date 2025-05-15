@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useAccount } from "wagmi";
 import {
   fetchMerkleTreeData,
@@ -22,6 +22,10 @@ import {
   getRewardTokenContract,
 } from "@/utils/clients";
 import { REWARD_TOKEN_ADDRESS } from "@/constants";
+import {
+  ContractTransactionReceipt,
+  LogDescription,
+} from "ethers";
 
 interface UseRewardsProps {
   distributorAddress: `0x${string}`;
@@ -31,6 +35,9 @@ export function useRewards({ distributorAddress }: UseRewardsProps) {
   const { address, isConnected } = useAccount();
 
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingRewardUpdate, setIsLoadingRewardUpdate] = useState<
+    string | null
+  >(null);
   const [error, setError] = useState<string | null>(null);
 
   const [currentIpfsHash, setCurrentIpfsHash] = useState<string>("");
@@ -93,17 +100,29 @@ export function useRewards({ distributorAddress }: UseRewardsProps) {
 
       // Call addTrigger function
       const tx = await contract.addTrigger();
-      const receipt = await tx.wait();
+      const receipt: ContractTransactionReceipt = await tx.wait();
 
-      console.log("Reward update triggered successfully:", receipt.hash);
+      console.log("Reward update triggered successfully:", receipt);
+
+      // Find the WavsNftTrigger event in the logs
+      const event = receipt.logs.length
+        ? contract.interface.parseLog(receipt.logs[0])
+        : null;
+      if (event?.name === "WavsRewardsTrigger") {
+        const triggerId = event.args.triggerId.toString();
+        console.log("Reward update triggered with ID:", triggerId);
+        setIsLoadingRewardUpdate(triggerId);
+      }
 
       return receipt.hash;
     } catch (err: any) {
       console.error("Error triggering reward update:", err);
       setError(`Failed to update rewards: ${err.message || "Unknown error"}`);
+      setIsLoadingRewardUpdate(null);
       return null;
     } finally {
       setIsLoading(false);
+      // isLoadingRewardUpdate is called once reward update is detected for this trigger ID
     }
   }, [isConnected, distributorAddress, loadInitialData]);
 
@@ -319,6 +338,9 @@ export function useRewards({ distributorAddress }: UseRewardsProps) {
     loadInitialData();
   }, [loadInitialData]);
 
+  const isLoadingRewardUpdateRef = useRef(isLoadingRewardUpdate);
+  isLoadingRewardUpdateRef.current = isLoadingRewardUpdate;
+
   // Listen for RewardsUpdate events
   useEffect(() => {
     if (!distributorAddress) return;
@@ -329,8 +351,17 @@ export function useRewards({ distributorAddress }: UseRewardsProps) {
     const rewardsUpdateFilter = contract.filters.RewardsUpdate();
 
     // Set up event listener
-    const handleRewardsUpdate = async () => {
-      console.log("RewardsUpdate event received, reloading data...");
+    const handleRewardsUpdate = async (event: LogDescription) => {
+      const triggerId = event.args.triggerId.toString();
+      // If this event matches the trigger we're waiting for, unset to stop
+      // loading indicator.
+      if (isLoadingRewardUpdateRef.current === triggerId) {
+        setIsLoadingRewardUpdate(null);
+      }
+
+      console.log(
+        `RewardsUpdate event received with trigger ID ${triggerId}, reloading data...`
+      );
       await loadInitialData();
     };
 
@@ -360,7 +391,7 @@ export function useRewards({ distributorAddress }: UseRewardsProps) {
   }, [isConnected, address, merkleData, refreshAll]);
 
   return {
-    isLoading,
+    isLoading: isLoading || isLoadingRewardUpdate !== null,
     error,
     merkleRoot,
     currentIpfsHash,
