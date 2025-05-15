@@ -3,14 +3,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useAccount } from "wagmi";
 import {
-  fetchMerkleTreeData,
-  getPendingRewards,
-  getClaimedAmount,
-  claimRewards,
-  fetchRewardState,
-  getERC721Balance,
-} from "@/utils/wagmi-utils";
-import {
   MerkleTreeData,
   PendingReward,
   RewardClaim,
@@ -18,14 +10,13 @@ import {
 } from "@/types";
 import {
   getBrowserProviderWalletSigner,
+  getNftContract,
   getRewardDistributorContract,
   getRewardTokenContract,
 } from "@/utils/clients";
 import { REWARD_TOKEN_ADDRESS } from "@/constants";
-import {
-  ContractTransactionReceipt,
-  LogDescription,
-} from "ethers";
+import { ContractTransactionReceipt, LogDescription } from "ethers";
+import { bytes32DigestToCid, cidToUrl, normalizeCid } from "@/utils/ipfs";
 
 interface UseRewardsProps {
   distributorAddress: `0x${string}`;
@@ -62,7 +53,23 @@ export function useRewards({ distributorAddress }: UseRewardsProps) {
 
       console.log("Fetching initial data from contract:", distributorAddress);
 
-      const { ipfsHash, root } = await fetchRewardState(distributorAddress);
+      const distributor = getRewardDistributorContract(distributorAddress);
+
+      // Read the root
+      let root = await distributor.root();
+
+      // Read the IPFS hash
+      let ipfsHash = await distributor.ipfsHash();
+
+      console.log("Raw root:", root);
+      console.log("Raw ipfsHashBytes:", ipfsHash);
+
+      root = /^0x0+$/.test(root as string) ? null : root;
+      // Convert bytes32 to a proper IPFS CID if present
+      ipfsHash = /^0x0+$/.test(ipfsHash as string)
+        ? null
+        : await bytes32DigestToCid(ipfsHash as string);
+      console.log("Converted bytes32 to IPFS CID:", ipfsHash);
 
       if (ipfsHash && root) {
         setCurrentIpfsHash(ipfsHash);
@@ -137,12 +144,21 @@ export function useRewards({ distributorAddress }: UseRewardsProps) {
       setIsLoading(true);
       console.log("Fetching merkle data from IPFS:", currentIpfsHash);
 
-      const data = await fetchMerkleTreeData(currentIpfsHash);
-      console.log("Merkle data received:", data);
+      const normalizedCid = normalizeCid(currentIpfsHash);
+      const ipfsUrl = cidToUrl(normalizedCid);
+      console.log(`Fetching Merkle tree data from ${ipfsUrl}`);
 
-      if (data) {
-        setMerkleData(data);
+      const response = await fetch(ipfsUrl);
+      if (!response.ok) {
+        throw new Error(
+          `Failed to fetch IPFS data with status ${response.status}: ${response.statusText}`
+        );
       }
+
+      const data: MerkleTreeData = await response.json();
+      console.log("Merkle tree data received:", data);
+
+      setMerkleData(data);
     } catch (err) {
       console.error("Error fetching merkle data:", err);
       setError("Failed to load reward details from IPFS");
@@ -153,19 +169,31 @@ export function useRewards({ distributorAddress }: UseRewardsProps) {
 
   // Get pending rewards for the connected account
   const fetchPendingRewards = useCallback(async () => {
-    if (!address || !currentIpfsHash) {
-      console.log("No account or IPFS hash available for fetchPendingRewards");
+    if (!address || !merkleData) {
+      console.log(
+        "No account or merkle data available for fetchPendingRewards"
+      );
       return;
     }
 
     try {
       setIsLoading(true);
-      console.log("Fetching pending rewards for account:", address);
+      console.log(
+        `Looking for rewards for account ${address} in ${merkleData.tree.length} entries`
+      );
 
-      const rewards = await getPendingRewards(address, currentIpfsHash);
-      console.log("Pending rewards received:", rewards);
+      const pendingReward =
+        merkleData.tree.find(
+          (reward) => reward.account.toLowerCase() === address.toLowerCase()
+        ) || null;
 
-      setPendingReward(rewards);
+      if (pendingReward) {
+        console.log("Found pending reward:", pendingReward);
+      } else {
+        console.log("No pending rewards found for this account");
+      }
+
+      setPendingReward(pendingReward);
     } catch (err) {
       console.error("Error fetching pending rewards:", err);
       setError("Failed to load your pending rewards");
@@ -185,14 +213,14 @@ export function useRewards({ distributorAddress }: UseRewardsProps) {
       setIsLoading(true);
       console.log("Fetching claimed amount for token:", rewardTokenAddress);
 
-      const claimed = await getClaimedAmount(
-        distributorAddress,
+      const distributor = getRewardDistributorContract(distributorAddress);
+      const claimed: bigint = await distributor.claimed(
         address,
         rewardTokenAddress
       );
 
       console.log("Claimed amount:", claimed);
-      setClaimedAmount(claimed);
+      setClaimedAmount(claimed.toString());
 
       return claimed;
     } catch (err) {
@@ -219,7 +247,7 @@ export function useRewards({ distributorAddress }: UseRewardsProps) {
         (merkleData?.metadata?.sources || []).map(async (source) => {
           const balance =
             source.name === "ERC721"
-              ? await getERC721Balance(source.metadata.address, address)
+              ? await getNftContract(source.metadata.address).balanceOf(address)
               : undefined;
 
           return {
@@ -292,15 +320,25 @@ export function useRewards({ distributorAddress }: UseRewardsProps) {
 
       const claimed = await fetchClaimedAmount();
 
-      const txHash = await claimRewards(
-        distributorAddress,
+      // Get signer
+      const { signer } = await getBrowserProviderWalletSigner();
+
+      // Connect to the contract
+      const contract = getRewardDistributorContract(distributorAddress, signer);
+
+      console.log("Triggering reward update...");
+
+      // Call addTrigger function
+      const tx = await contract.claim(
         address,
         pendingReward.reward,
         pendingReward.claimable,
         pendingReward.proof
       );
+      console.log("Claim tx:", tx);
 
-      console.log("Claim transaction submitted:", txHash);
+      const receipt: ContractTransactionReceipt = await tx.wait();
+      console.log("Claim tx receipt:", receipt);
 
       // Refresh data after claiming
       await refreshAll();
@@ -314,11 +352,11 @@ export function useRewards({ distributorAddress }: UseRewardsProps) {
             BigInt(pendingReward.claimable) - BigInt(claimed)
           ).toString(),
           timestamp: Date.now(),
-          transactionHash: txHash,
+          transactionHash: receipt.hash,
         },
       ]);
 
-      return txHash;
+      return receipt.hash;
     } catch (err: any) {
       console.error("Error claiming rewards:", err);
       setError(`Failed to claim rewards: ${err.message || "Unknown error"}`);
