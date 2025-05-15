@@ -83,42 +83,44 @@ const NFTDetailPage: React.FC = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6">
             {/* Image section */}
-            <div className="relative">
-              {/* Tech frame for the image */}
-              <div className="absolute -inset-px border border-primary/30"></div>
-              
-              {/* Scanlines effect */}
-              <div className="absolute inset-0 z-10 pointer-events-none">
-                <div
-                  className="w-full h-full"
-                  style={{
-                    backgroundImage:
-                      "repeating-linear-gradient(to bottom, transparent 0px, transparent 1px, rgba(0, 255, 65, 0.03) 1px, rgba(0, 255, 65, 0.03) 2px)",
-                    backgroundSize: "100% 2px",
-                  }}
-                ></div>
-              </div>
-              
-              {/* NFT Image */}
-              {imageUrl ? (
-                <div className="aspect-square overflow-hidden">
-                  <img 
-                    src={imageUrl} 
-                    alt={metadata?.name || `NFT #${tokenId}`}
-                    className="w-full h-full object-cover"
-                  />
+            <div className="relative w-full">
+              <div className="relative aspect-square">
+                {/* Tech frame for the image */}
+                <div className="absolute -inset-px border border-primary/30"></div>
+                
+                {/* Scanlines effect */}
+                <div className="absolute inset-0 z-10 pointer-events-none">
+                  <div
+                    className="w-full h-full"
+                    style={{
+                      backgroundImage:
+                        "repeating-linear-gradient(to bottom, transparent 0px, transparent 1px, rgba(0, 255, 65, 0.03) 1px, rgba(0, 255, 65, 0.03) 2px)",
+                      backgroundSize: "100% 2px",
+                    }}
+                  ></div>
                 </div>
-              ) : (
-                <div className="aspect-square bg-dark-900 flex items-center justify-center">
-                  <div className="border-2 border-primary p-4">
-                    <p className="text-primary/70 font-mono">NO_IMAGE_DATA</p>
+                
+                {/* NFT Image */}
+                {imageUrl ? (
+                  <div className="aspect-square overflow-hidden">
+                    <img 
+                      src={imageUrl} 
+                      alt={metadata?.name || `NFT #${tokenId}`}
+                      className="w-full h-full object-cover"
+                    />
                   </div>
-                </div>
-              )}
+                ) : (
+                  <div className="aspect-square bg-dark-900 flex items-center justify-center">
+                    <div className="border-2 border-primary p-4">
+                      <p className="text-primary/70 font-mono">NO_IMAGE_DATA</p>
+                    </div>
+                  </div>
+                )}
 
-              {/* Token ID overlay */}
-              <div className="absolute top-4 left-4 bg-dark-900/80 backdrop-blur-sm border border-primary/50 px-3 py-2">
-                <div className="text-primary font-mono">#{tokenId}</div>
+                {/* Token ID overlay */}
+                <div className="absolute top-4 left-4 bg-dark-900/80 backdrop-blur-sm border border-primary/50 px-3 py-2">
+                  <div className="text-primary font-mono">#{tokenId}</div>
+                </div>
               </div>
             </div>
 
