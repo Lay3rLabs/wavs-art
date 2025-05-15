@@ -161,7 +161,20 @@ const RewardsPage: React.FC = () => {
             IPFS::
             <span className="text-warning">
               {currentIpfsHash
-                ? currentIpfsHash.substring(0, 8) + "..."
+                ? (
+                    <>
+                      <span>{currentIpfsHash.substring(0, 8) + "..."}</span>
+                      <a 
+                        href={`https://gateway.ipfs.io/ipfs/${currentIpfsHash}`} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="ml-2 text-xs underline hover:text-accent transition-colors"
+                        title="View IPFS data"
+                      >
+                        [VIEW]
+                      </a>
+                    </>
+                  )
                 : "NONE"}
             </span>
           </div>

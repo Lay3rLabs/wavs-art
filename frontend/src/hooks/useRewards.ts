@@ -26,6 +26,7 @@ export function useRewards({ distributorAddress }: UseRewardsProps) {
   const { address, isConnected } = useAccount();
 
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingTx, setIsLoadingTx] = useState(false);
   const [isLoadingRewardUpdate, setIsLoadingRewardUpdate] = useState<
     string | null
   >(null);
@@ -95,7 +96,7 @@ export function useRewards({ distributorAddress }: UseRewardsProps) {
 
     try {
       setError(null);
-      setIsLoading(true);
+      setIsLoadingTx(true);
 
       // Get signer
       const { signer } = await getBrowserProviderWalletSigner();
@@ -128,7 +129,7 @@ export function useRewards({ distributorAddress }: UseRewardsProps) {
       setIsLoadingRewardUpdate(null);
       return null;
     } finally {
-      setIsLoading(false);
+      setIsLoadingTx(false);
       // isLoadingRewardUpdate is called once reward update is detected for this trigger ID
     }
   }, [isConnected, distributorAddress, loadInitialData]);
@@ -200,7 +201,7 @@ export function useRewards({ distributorAddress }: UseRewardsProps) {
     } finally {
       setIsLoading(false);
     }
-  }, [address, currentIpfsHash]);
+  }, [address, merkleData, currentIpfsHash]);
 
   // Get claimed amount
   const fetchClaimedAmount = useCallback(async () => {
@@ -292,8 +293,8 @@ export function useRewards({ distributorAddress }: UseRewardsProps) {
   }, [address, merkleData]);
 
   const refreshAll = useCallback(
-    async () =>
-      await Promise.allSettled([
+    () =>
+      Promise.allSettled([
         fetchPendingRewards(),
         fetchClaimedAmount(),
         fetchRewardSources(),
@@ -316,7 +317,7 @@ export function useRewards({ distributorAddress }: UseRewardsProps) {
 
     try {
       setError(null);
-      setIsLoading(true);
+      setIsLoadingTx(true);
       console.log("Claiming rewards with proof:", pendingReward.proof);
 
       const claimed = await fetchClaimedAmount();
@@ -363,7 +364,7 @@ export function useRewards({ distributorAddress }: UseRewardsProps) {
       setError(`Failed to claim rewards: ${err.message || "Unknown error"}`);
       return null;
     } finally {
-      setIsLoading(false);
+      setIsLoadingTx(false);
     }
   }, [
     address,
@@ -432,7 +433,7 @@ export function useRewards({ distributorAddress }: UseRewardsProps) {
   }, [isConnected, address, merkleData, refreshAll]);
 
   return {
-    isLoading: isLoading || isLoadingRewardUpdate !== null,
+    isLoading: isLoading || isLoadingTx || isLoadingRewardUpdate !== null,
     error,
     merkleRoot,
     currentIpfsHash,
