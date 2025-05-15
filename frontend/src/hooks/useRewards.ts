@@ -316,6 +316,7 @@ export function useRewards({ distributorAddress }: UseRewardsProps) {
 
     try {
       setError(null);
+      setIsLoading(true);
       console.log("Claiming rewards with proof:", pendingReward.proof);
 
       const claimed = await fetchClaimedAmount();
@@ -326,7 +327,7 @@ export function useRewards({ distributorAddress }: UseRewardsProps) {
       // Connect to the contract
       const contract = getRewardDistributorContract(distributorAddress, signer);
 
-      console.log("Triggering reward update...");
+      console.log("Claiming rewards...");
 
       // Call addTrigger function
       const tx = await contract.claim(
@@ -361,6 +362,8 @@ export function useRewards({ distributorAddress }: UseRewardsProps) {
       console.error("Error claiming rewards:", err);
       setError(`Failed to claim rewards: ${err.message || "Unknown error"}`);
       return null;
+    } finally {
+      setIsLoading(false);
     }
   }, [
     address,
