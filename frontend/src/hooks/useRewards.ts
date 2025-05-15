@@ -1,5 +1,6 @@
 "use client";
 
+import useLocalStorageState from "use-local-storage-state";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useAccount } from "wagmi";
 import {
@@ -39,7 +40,12 @@ export function useRewards({ distributorAddress }: UseRewardsProps) {
     null
   );
   const [claimedAmount, setClaimedAmount] = useState<string>("0");
-  const [claimHistory, setClaimHistory] = useState<RewardClaim[]>([]);
+  const [claimHistory, setClaimHistory] = useLocalStorageState<RewardClaim[]>(
+    "claimHistory",
+    {
+      defaultValue: [],
+    }
+  );
   const [rewardSources, setRewardSources] = useState<RewardSource[]>([]);
   const [tokenBalance, setTokenBalance] = useState<string>("0");
   const [loadedOnce, setLoadedOnce] = useState(false);
