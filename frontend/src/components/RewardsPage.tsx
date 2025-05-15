@@ -17,6 +17,7 @@ const RewardsPage: React.FC = () => {
     claimedAmount,
     claimHistory,
     rewardSources,
+    tokenBalance,
     claim,
     refresh,
     triggerUpdate,
@@ -245,6 +246,25 @@ const RewardsPage: React.FC = () => {
         )}
 
         <div className="space-y-8">
+          {/* Token Balance Section */}
+          <div className="space-y-4">
+            <h3 className="text-lg font-mono text-secondary flex items-center">
+              <span className="w-1 h-6 bg-secondary mr-2"></span>
+              TOKEN_BALANCE
+            </h3>
+
+            <div className="border border-dark-600 p-4 bg-dark-800">
+              <div className="bg-dark-900 p-3 rounded">
+                <div className="text-xs text-primary/60 font-mono mb-1">
+                  CURRENT_BALANCE
+                </div>
+                <div className="text-lg text-secondary font-mono">
+                  {ethers.formatEther(tokenBalance)} tokens
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Pending Rewards Section */}
           <div className="space-y-4">
             <h3 className="text-lg font-mono text-accent flex items-center">

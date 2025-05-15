@@ -4,7 +4,7 @@ import ERC20_ABI from "@/abis/ERC20.json";
 import WavsNftAbi from "@/abis/WavsNft.json";
 import { getAccount, getPublicClient, writeContract } from "wagmi/actions";
 import { bytes32DigestToCid, cidToUrl, normalizeCid } from "./ipfs";
-import { getDistributorContract, getProvider } from "./clients";
+import { getRewardDistributorContract, getProvider } from "./clients";
 
 // Fetch Merkle Tree data from IPFS
 export async function fetchMerkleTreeData(
@@ -58,7 +58,7 @@ export async function fetchRewardState(
 ): Promise<{ ipfsHash: string | null; root: string | null }> {
   console.log(`Fetching reward state from ${distributorAddress}`);
 
-  const distributor = getDistributorContract(distributorAddress);
+  const distributor = getRewardDistributorContract(distributorAddress);
 
   // Read the root
   let root = await distributor.root();
@@ -119,7 +119,7 @@ export async function getClaimedAmount(
 ): Promise<string> {
   console.log(`Getting claimed amount for ${account} and token ${rewardToken}`);
 
-  const distributor = getDistributorContract(distributorAddress);
+  const distributor = getRewardDistributorContract(distributorAddress);
 
   const claimed: bigint = await distributor.claimed(account, rewardToken);
 

@@ -19,7 +19,8 @@ import {
 import { ethers } from "ethers";
 import {
   getBrowserProviderWalletSigner,
-  getDistributorContract,
+  getRewardDistributorContract,
+  getRewardTokenContract,
 } from "@/utils/clients";
 
 interface UseRewardsProps {
@@ -41,6 +42,7 @@ export function useRewards({ distributorAddress }: UseRewardsProps) {
   const [claimedAmount, setClaimedAmount] = useState<string>("0");
   const [claimHistory, setClaimHistory] = useState<RewardClaim[]>([]);
   const [rewardSources, setRewardSources] = useState<RewardSource[]>([]);
+  const [tokenBalance, setTokenBalance] = useState<string>("0");
 
   // Fetch current trigger info (merkle root and IPFS hash)
   const loadInitialData = useCallback(async () => {
@@ -221,6 +223,31 @@ export function useRewards({ distributorAddress }: UseRewardsProps) {
     }
   }, [address, merkleData]);
 
+  // Get token balance
+  const fetchTokenBalance = useCallback(async () => {
+    if (!address) {
+      return "0"
+    }
+
+    try {
+      setIsLoading(true);
+
+      const contract = await getRewardTokenContract(merkleData?.metadata.reward_token_address);
+      const balance = (await contract.balanceOf(address)).toString();
+
+      console.log("Token balance:", balance);
+      setTokenBalance(balance);
+
+      return balance;
+    } catch (err) {
+      console.error("Error fetching token balance:", err);
+      setError("Failed to load token balance");
+      return "0";
+    } finally {
+      setIsLoading(false);
+    }
+  }, [address, merkleData]);
+
   // Claim rewards
   const claim = useCallback(async () => {
     if (!address || !pendingReward) {
@@ -285,7 +312,7 @@ export function useRewards({ distributorAddress }: UseRewardsProps) {
     if (!distributorAddress) return;
 
     // Get contract instance using the utility
-    const contract = getDistributorContract(distributorAddress);
+    const contract = getRewardDistributorContract(distributorAddress);
 
     const rewardsUpdateFilter = contract.filters.RewardsUpdate();
 
@@ -320,6 +347,7 @@ export function useRewards({ distributorAddress }: UseRewardsProps) {
         fetchPendingRewards(),
         fetchClaimedAmount(),
         fetchRewardSources(),
+        fetchTokenBalance(),
       ]);
     }
   }, [
@@ -329,7 +357,7 @@ export function useRewards({ distributorAddress }: UseRewardsProps) {
     fetchPendingRewards,
     fetchClaimedAmount,
     fetchRewardSources,
-    // We specifically don't include rewardSources here to avoid the infinite loop
+    fetchTokenBalance,
   ]);
 
   return {
@@ -342,6 +370,7 @@ export function useRewards({ distributorAddress }: UseRewardsProps) {
     claimedAmount,
     claimHistory,
     rewardSources,
+    tokenBalance,
     claim,
     refresh: loadInitialData,
     triggerUpdate,
