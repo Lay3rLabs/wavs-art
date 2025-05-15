@@ -43,11 +43,14 @@ export function useRewards({ distributorAddress }: UseRewardsProps) {
   const [claimHistory, setClaimHistory] = useState<RewardClaim[]>([]);
   const [rewardSources, setRewardSources] = useState<RewardSource[]>([]);
   const [tokenBalance, setTokenBalance] = useState<string>("0");
+  const [loadedOnce, setLoadedOnce] = useState(false);
 
   // Fetch current trigger info (merkle root and IPFS hash)
   const loadInitialData = useCallback(async () => {
     try {
       setIsLoading(true);
+      await fetchTokenBalance();
+
       console.log("Fetching reward state from contract:", distributorAddress);
 
       const { ipfsHash, root } = await fetchRewardState(distributorAddress);
@@ -63,6 +66,7 @@ export function useRewards({ distributorAddress }: UseRewardsProps) {
       setError("Failed to load reward data from contract");
     } finally {
       setIsLoading(false);
+      setLoadedOnce(true);
     }
   }, [distributorAddress]);
 
@@ -374,5 +378,6 @@ export function useRewards({ distributorAddress }: UseRewardsProps) {
     claim,
     refresh: loadInitialData,
     triggerUpdate,
+    loadedOnce,
   };
 }

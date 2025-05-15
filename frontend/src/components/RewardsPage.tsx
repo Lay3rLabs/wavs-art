@@ -10,6 +10,7 @@ const RewardsPage: React.FC = () => {
   const [isUpdating, setIsUpdating] = useState(false);
   const {
     isLoading,
+    loadedOnce,
     error,
     merkleRoot,
     currentIpfsHash,
@@ -91,7 +92,7 @@ const RewardsPage: React.FC = () => {
     );
   }
 
-  if (isLoading) {
+  if (!loadedOnce) {
     return (
       <main className="flex-1 py-8 px-4 md:px-8 max-w-6xl mx-auto w-full">
         <div className="card">
@@ -136,8 +137,8 @@ const RewardsPage: React.FC = () => {
           <div className="flex space-x-1 px-2 z-10">
             <div className="w-2 h-2 rounded-full bg-primary"></div>
             <div 
-              className={`w-2 h-2 rounded-full ${isUpdating ? 'bg-warning animate-pulse' : 'bg-secondary'} cursor-pointer hover:bg-secondary/80 transition-colors`}
-              onClick={handleTriggerRewardUpdate}
+              className={`w-2 h-2 rounded-full ${isUpdating ? 'bg-warning animate-pulse' : 'bg-secondary'} ${!isLoading ? 'cursor-pointer hover:bg-secondary/80 transition-colors' : 'opacity-50'}`}
+              onClick={!isLoading ? handleTriggerRewardUpdate : undefined}
             ></div>
             <div className="w-2 h-2 rounded-full bg-accent"></div>
           </div>
@@ -171,7 +172,7 @@ const RewardsPage: React.FC = () => {
             </span>
           </div>
           <div className="text-primary">
-            STATUS::<span className="text-accent">ONLINE</span>
+            STATUS::ONLINE
           </div>
         </div>
 
@@ -184,10 +185,11 @@ const RewardsPage: React.FC = () => {
           </h2>
           <button
             onClick={() => refresh()}
-            className="btn btn-secondary text-sm flex items-center"
+            className={`btn btn-secondary text-sm flex items-center ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+            disabled={isLoading}
           >
             <svg
-              className="h-3 w-3 mr-1"
+              className={`h-3 w-3 mr-1 ${isLoading ? 'animate-spin' : ''}`}
               viewBox="0 0 24 24"
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
@@ -221,7 +223,7 @@ const RewardsPage: React.FC = () => {
                 strokeLinejoin="round"
               />
             </svg>
-            RESCAN
+            {isLoading ? "UPDATING..." : "RESCAN"}
           </button>
         </div>
 
@@ -267,13 +269,24 @@ const RewardsPage: React.FC = () => {
 
           {/* Pending Rewards Section */}
           <div className="space-y-4">
-            <h3 className="text-lg font-mono text-accent flex items-center">
-              <span className="w-1 h-6 bg-accent mr-2"></span>
-              PENDING_REWARDS
-              <span className="ml-2 text-xs border border-accent px-1 bg-dark-900">
-                {pendingReward ? "1" : "0"}
-              </span>
-            </h3>
+            <div className="flex justify-between items-center">
+              <h3 className="text-lg font-mono text-accent flex items-center">
+                <span className="w-1 h-6 bg-accent mr-2"></span>
+                PENDING_REWARDS
+                <span className="ml-2 text-xs border border-accent px-1 bg-dark-900">
+                  {pendingReward ? "1" : "0"}
+                </span>
+              </h3>
+              <div className="text-primary flex items-center text-sm gap-3">
+                <span>
+                  AUTO_REFRESH
+                </span>
+                <span className="relative flex items-center w-3 h-3">
+                  <span className="w-3 h-3 rounded-full bg-accent animate-pulse"></span>
+                  <span className="absolute inset-0 w-3 h-3 rounded-full bg-accent/30 animate-ping"></span>
+                </span>
+              </div>
+            </div>
 
             {!pendingReward ? (
               <div className="border border-dashed border-dark-600 py-8 text-center relative">
@@ -310,14 +323,14 @@ const RewardsPage: React.FC = () => {
 
                 <button
                   onClick={() => claim()}
-                  className="w-full btn btn-accent font-mono text-sm"
+                  className={`w-full btn btn-accent font-mono text-sm ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
                   disabled={
-                    BigInt(pendingReward.claimable) <= BigInt(claimedAmount)
+                    isLoading || BigInt(pendingReward.claimable) <= BigInt(claimedAmount)
                   }
                 >
                   {BigInt(pendingReward.claimable) <= BigInt(claimedAmount)
                     ? "NO_REWARDS_TO_CLAIM"
-                    : "CLAIM_REWARDS"}
+                    : isLoading ? "UPDATING..." : "CLAIM_REWARDS"}
                 </button>
               </div>
             )}
