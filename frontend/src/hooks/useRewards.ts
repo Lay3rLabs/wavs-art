@@ -16,12 +16,12 @@ import {
   RewardClaim,
   RewardSource,
 } from "@/types";
-import { ethers } from "ethers";
 import {
   getBrowserProviderWalletSigner,
   getRewardDistributorContract,
   getRewardTokenContract,
 } from "@/utils/clients";
+import { REWARD_TOKEN_ADDRESS } from "@/constants";
 
 interface UseRewardsProps {
   distributorAddress: `0x${string}`;
@@ -45,13 +45,15 @@ export function useRewards({ distributorAddress }: UseRewardsProps) {
   const [tokenBalance, setTokenBalance] = useState<string>("0");
   const [loadedOnce, setLoadedOnce] = useState(false);
 
+  const rewardTokenAddress =
+    merkleData?.metadata.reward_token_address || REWARD_TOKEN_ADDRESS;
+
   // Fetch current trigger info (merkle root and IPFS hash)
   const loadInitialData = useCallback(async () => {
     try {
       setIsLoading(true);
-      await fetchTokenBalance();
 
-      console.log("Fetching reward state from contract:", distributorAddress);
+      console.log("Fetching initial data from contract:", distributorAddress);
 
       const { ipfsHash, root } = await fetchRewardState(distributorAddress);
 
@@ -62,8 +64,8 @@ export function useRewards({ distributorAddress }: UseRewardsProps) {
         console.log("No valid IPFS hash or merkle root found in contract");
       }
     } catch (err) {
-      console.error("Error fetching reward state:", err);
-      setError("Failed to load reward data from contract");
+      console.error("Error fetching initial data:", err);
+      setError("Failed to load initial data from contract");
     } finally {
       setIsLoading(false);
       setLoadedOnce(true);
@@ -84,17 +86,8 @@ export function useRewards({ distributorAddress }: UseRewardsProps) {
       // Get signer
       const { signer } = await getBrowserProviderWalletSigner();
 
-      // RewardDistributor ABI - just the function we need
-      const rewardDistributorABI = [
-        "function addTrigger() external returns (uint256)",
-      ];
-
       // Connect to the contract
-      const contract = new ethers.Contract(
-        distributorAddress,
-        rewardDistributorABI,
-        signer
-      );
+      const contract = getRewardDistributorContract(distributorAddress, signer);
 
       console.log("Triggering reward update...");
 
@@ -164,20 +157,19 @@ export function useRewards({ distributorAddress }: UseRewardsProps) {
 
   // Get claimed amount
   const fetchClaimedAmount = useCallback(async () => {
-    if (!address || !merkleData?.metadata.reward_token_address) {
+    if (!address) {
       console.log("Missing requirements for fetchClaimedAmount");
       return "0";
     }
 
     try {
       setIsLoading(true);
-      const tokenAddress = merkleData.metadata.reward_token_address;
-      console.log("Fetching claimed amount for token:", tokenAddress);
+      console.log("Fetching claimed amount for token:", rewardTokenAddress);
 
       const claimed = await getClaimedAmount(
         distributorAddress,
         address,
-        tokenAddress
+        rewardTokenAddress
       );
 
       console.log("Claimed amount:", claimed);
@@ -230,13 +222,13 @@ export function useRewards({ distributorAddress }: UseRewardsProps) {
   // Get token balance
   const fetchTokenBalance = useCallback(async () => {
     if (!address) {
-      return "0"
+      return "0";
     }
 
     try {
       setIsLoading(true);
 
-      const contract = await getRewardTokenContract(merkleData?.metadata.reward_token_address);
+      const contract = await getRewardTokenContract(rewardTokenAddress);
       const balance = (await contract.balanceOf(address)).toString();
 
       console.log("Token balance:", balance);
@@ -251,6 +243,22 @@ export function useRewards({ distributorAddress }: UseRewardsProps) {
       setIsLoading(false);
     }
   }, [address, merkleData]);
+
+  const refreshAll = useCallback(
+    async () =>
+      await Promise.allSettled([
+        fetchPendingRewards(),
+        fetchClaimedAmount(),
+        fetchRewardSources(),
+        fetchTokenBalance(),
+      ]),
+    [
+      fetchPendingRewards,
+      fetchClaimedAmount,
+      fetchRewardSources,
+      fetchTokenBalance,
+    ]
+  );
 
   // Claim rewards
   const claim = useCallback(async () => {
@@ -276,7 +284,7 @@ export function useRewards({ distributorAddress }: UseRewardsProps) {
       console.log("Claim transaction submitted:", txHash);
 
       // Refresh data after claiming
-      await Promise.all([fetchClaimedAmount(), fetchPendingRewards()]);
+      await refreshAll();
 
       // Add the claim to the claim history
       setClaimHistory((h) => [
@@ -345,24 +353,11 @@ export function useRewards({ distributorAddress }: UseRewardsProps) {
 
   // Load user-specific data when account or merkleData changes
   useEffect(() => {
-    if (isConnected && address && merkleData) {
-      console.log("Account and merkle data available, fetching user data");
-      Promise.allSettled([
-        fetchPendingRewards(),
-        fetchClaimedAmount(),
-        fetchRewardSources(),
-        fetchTokenBalance(),
-      ]);
+    if (isConnected && address) {
+      console.log("Account available, fetching user data");
+      refreshAll();
     }
-  }, [
-    isConnected,
-    address,
-    merkleData,
-    fetchPendingRewards,
-    fetchClaimedAmount,
-    fetchRewardSources,
-    fetchTokenBalance,
-  ]);
+  }, [isConnected, address, merkleData, refreshAll]);
 
   return {
     isLoading,
