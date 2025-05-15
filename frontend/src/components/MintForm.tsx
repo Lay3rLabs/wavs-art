@@ -131,14 +131,14 @@ const MintForm: React.FC = () => {
   return (
     <div className="card mb-8">
       {/* Status indicators */}
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-xl font-glitch tracking-wider relative">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
+        <h2 className="text-xl font-glitch tracking-wider relative mb-2 sm:mb-0">
           <span className="text-primary mr-2">[</span>
           INITIALIZE_NEW_ASSET
           <span className="text-primary ml-2">]</span>
           <span className="absolute -top-1 -right-3 w-2 h-2 bg-primary animate-pulse"></span>
         </h2>
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center space-x-3 mt-2 sm:mt-0">
           <div className="text-xs font-mono">
             <span className="text-primary">STATUS:</span>
             <span

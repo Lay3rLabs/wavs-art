@@ -208,7 +208,7 @@ const NFTGallery: React.FC = () => {
       </div>
 
       {/* Stats bar */}
-      <div className="flex items-center justify-between mb-4 mt-8 font-mono text-xs border border-dark-700 bg-dark-900 p-2">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4 mt-8 font-mono text-xs border border-dark-700 bg-dark-900 p-2">
         <div className="text-primary">
           NFTS::<span className="text-accent">{encryptedNfts}</span>
         </div>
@@ -223,7 +223,7 @@ const NFTGallery: React.FC = () => {
         </div>
       </div>
 
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 space-y-3 sm:space-y-0">
         <h2 className="text-xl font-glitch relative">
           <span className="text-primary mr-2">[</span>
           <span className="crt-flicker">ASSET_VAULT</span>
@@ -232,7 +232,7 @@ const NFTGallery: React.FC = () => {
         </h2>
         <button
           onClick={() => refreshNfts()}
-          className="btn btn-secondary text-sm flex items-center"
+          className="btn btn-secondary text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-2 flex items-center whitespace-nowrap"
         >
           <svg
             className="h-3 w-3 mr-1"
@@ -418,6 +418,7 @@ const NFTGallery: React.FC = () => {
                       }
                       // Navigate to NFT detail page
                       navigate(`/nft/${nft.tokenId}`);
+                      window.scrollTo(0, 0); // Scroll to top after navigation
                     }}
                   >
                     {/* Status indicator */}
@@ -479,6 +480,7 @@ const NFTGallery: React.FC = () => {
                             onClick={(e) => {
                               e.stopPropagation();
                               navigate(`/nft/${nft.tokenId}`);
+                              window.scrollTo(0, 0); // Scroll to top after navigation
                             }}
                           >
                             VIEW

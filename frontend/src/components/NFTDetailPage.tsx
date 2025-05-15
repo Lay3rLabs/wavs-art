@@ -59,9 +59,9 @@ const NFTDetailPage: React.FC = () => {
         {/* Back button */}
         <button 
           onClick={() => navigate('/')}
-          className="mb-6 flex items-center text-accent hover:text-accent/80 transition-colors font-mono"
+          className="mb-4 sm:mb-6 flex items-center text-accent hover:text-accent/80 transition-colors font-mono text-xs sm:text-sm"
         >
-          <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <svg className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M19 12H5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             <path d="M12 19L5 12L12 5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
@@ -76,12 +76,12 @@ const NFTDetailPage: React.FC = () => {
               <div className="w-2 h-2 rounded-full bg-secondary"></div>
               <div className="w-2 h-2 rounded-full bg-accent"></div>
             </div>
-            <div className="mx-auto font-mono text-xs text-primary/70">
+            <div className="mx-auto font-mono text-xs text-primary/70 truncate">
               WAVS::NFT_ASSET::#{tokenId}
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 p-4 sm:p-6">
             {/* Image section */}
             <div className="relative w-full">
               <div className="relative aspect-square">
@@ -118,29 +118,30 @@ const NFTDetailPage: React.FC = () => {
                 )}
 
                 {/* Token ID overlay */}
-                <div className="absolute top-4 left-4 bg-dark-900/80 backdrop-blur-sm border border-primary/50 px-3 py-2">
-                  <div className="text-primary font-mono">#{tokenId}</div>
+                <div className="absolute top-4 left-4 bg-dark-900/80 backdrop-blur-sm border border-primary/50 px-2 sm:px-3 py-1 sm:py-2">
+                  <div className="text-primary font-mono text-sm">#{tokenId}</div>
                 </div>
               </div>
             </div>
 
             {/* Metadata section */}
-            <div className="space-y-6">
+            <div className="space-y-4 sm:space-y-6">
               {/* Title */}
               <div>
-                <h1 className="text-2xl font-glitch mb-2 relative">
+                <h1 className="text-xl sm:text-2xl font-glitch mb-2 relative">
                   <span className="text-primary mr-2">[</span>
                   {metadata?.name || "UNNAMED_ASSET"}
                   <span className="text-primary ml-2">]</span>
                 </h1>
                 
                 {/* Blockchain info */}
-                <div className="flex items-center space-x-3 text-xs font-mono text-primary/60">
+                <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs font-mono text-primary/60">
                   <div className="flex items-center">
-                    <span className="w-2 h-2 bg-accent animate-pulse mr-2"></span>
+                    <span className="w-2 h-2 bg-accent animate-pulse mr-1 sm:mr-2"></span>
                     <span>VERIFIED</span>
                   </div>
-                  <div>IPFS::{nft.tokenURI.substring(0, 20)}...</div>
+                  <div className="hidden sm:block">IPFS::{nft.tokenURI.substring(0, 20)}...</div>
+                  <div className="sm:hidden">IPFS::{nft.tokenURI.substring(0, 10)}...</div>
                   <a 
                     href={nft.tokenURI.replace("ipfs://", IPFS_GATEWAY_URL)}
                     target="_blank"
@@ -199,8 +200,8 @@ const NFTDetailPage: React.FC = () => {
                     <span className="text-primary/60">Token Standard:</span>
                     <span className="text-primary">ERC-721</span>
                   </div>
-                  <div className="flex">
-                    <span className="text-primary/60 mr-2">Token URI:</span>
+                  <div className="flex flex-col sm:flex-row">
+                    <span className="text-primary/60 sm:mr-2">Token URI:</span>
                     <span className="text-primary break-all text-xs">{nft.tokenURI}</span>
                   </div>
                 </div>

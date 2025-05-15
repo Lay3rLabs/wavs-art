@@ -150,7 +150,7 @@ const RewardsPage: React.FC = () => {
         </div>
 
         {/* Stats bar */}
-        <div className="flex items-center justify-between mb-4 mt-8 font-mono text-xs border border-dark-700 bg-dark-900 p-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2 mb-4 mt-8 font-mono text-xs border border-dark-700 bg-dark-900 p-2">
           <div className="text-primary">
             MERKLE::
             <span className="text-accent">
@@ -189,7 +189,7 @@ const RewardsPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 space-y-3 sm:space-y-0">
           <h2 className="text-xl font-glitch relative">
             <span className="text-primary mr-2">[</span>
             <span className="crt-flicker">REWARDS_VAULT</span>
@@ -198,7 +198,7 @@ const RewardsPage: React.FC = () => {
           </h2>
           <button
             onClick={() => refresh()}
-            className={`btn btn-secondary text-sm flex items-center ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+            className={`btn btn-secondary text-xs sm:text-sm px-2 sm:px-3 py-1 sm:py-2 flex items-center whitespace-nowrap ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
             disabled={isLoading}
           >
             <svg
@@ -282,7 +282,7 @@ const RewardsPage: React.FC = () => {
 
           {/* Pending Rewards Section */}
           <div className="space-y-4">
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-0">
               <h3 className="text-lg font-mono text-accent flex items-center">
                 <span className="w-1 h-6 bg-accent mr-2"></span>
                 PENDING_REWARDS
@@ -290,11 +290,11 @@ const RewardsPage: React.FC = () => {
                   {pendingReward ? "1" : "0"}
                 </span>
               </h3>
-              <div className="text-primary flex items-center text-sm gap-3">
-                <span>
+              <div className="text-primary flex items-center text-xs sm:text-sm">
+                <span className="whitespace-nowrap">
                   AUTO_REFRESH
                 </span>
-                <span className="relative flex items-center w-3 h-3">
+                <span className="relative flex items-center w-3 h-3 ml-2">
                   <span className="w-3 h-3 rounded-full bg-accent animate-pulse"></span>
                   <span className="absolute inset-0 w-3 h-3 rounded-full bg-accent/30 animate-ping"></span>
                 </span>
@@ -315,7 +315,7 @@ const RewardsPage: React.FC = () => {
               </div>
             ) : (
               <div className="border border-dark-600 p-4 bg-dark-800">
-                <div className="grid grid-cols-2 gap-4 mb-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                   <div className="bg-dark-900 p-3 rounded">
                     <div className="text-xs text-primary/60 font-mono mb-1">
                       TOTAL_ALLOCATED
@@ -336,7 +336,7 @@ const RewardsPage: React.FC = () => {
 
                 <button
                   onClick={() => claim()}
-                  className={`w-full btn btn-accent font-mono text-sm ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  className={`w-full btn btn-accent font-mono text-xs sm:text-sm px-2 sm:px-4 py-2 ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
                   disabled={
                     isLoading || BigInt(pendingReward.claimable) <= BigInt(claimedAmount)
                   }
@@ -417,7 +417,7 @@ const RewardsPage: React.FC = () => {
               <div className="border border-dark-600 divide-y divide-dark-600">
                 {claimHistory.map((claim: RewardClaim, index: number) => (
                   <div key={index} className="p-4 bg-dark-800">
-                    <div className="flex justify-between items-start">
+                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-2 sm:space-y-0">
                       <div>
                         <div className="text-xs text-primary/60 font-mono">
                           AMOUNT_CLAIMED
@@ -426,7 +426,7 @@ const RewardsPage: React.FC = () => {
                           {ethers.formatEther(claim.claimed)} tokens
                         </div>
                       </div>
-                      <div className="text-right">
+                      <div className="text-left sm:text-right">
                         <div className="text-xs text-primary/60 font-mono">
                           TIMESTAMP
                         </div>
