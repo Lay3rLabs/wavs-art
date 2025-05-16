@@ -417,7 +417,9 @@ const NFTGallery: React.FC = () => {
                         return;
                       }
                       // Navigate to NFT detail page
-                      navigate(`/nft/${nft.tokenId}`);
+                      navigate(`/nft/${nft.tokenId}`, {
+                        state: { fromVault: true },
+                      });
                       window.scrollTo(0, 0); // Scroll to top after navigation
                     }}
                   >
@@ -479,7 +481,9 @@ const NFTGallery: React.FC = () => {
                             className="text-[10px] border border-accent/70 px-1 font-mono text-accent"
                             onClick={(e) => {
                               e.stopPropagation();
-                              navigate(`/nft/${nft.tokenId}`);
+                              navigate(`/nft/${nft.tokenId}`, {
+                                state: { fromVault: true },
+                              });
                               window.scrollTo(0, 0); // Scroll to top after navigation
                             }}
                           >

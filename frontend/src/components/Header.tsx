@@ -55,6 +55,14 @@ const Header: React.FC = () => {
           HOME
         </Link>
         <Link
+          to="/explorer"
+          className={`text-sm font-mono text-white hover:text-primary transition-colors ${
+            location.pathname === "/explorer" ? "border-b-2 border-primary" : ""
+          }`}
+        >
+          EXPLORE_NFTs
+        </Link>
+        <Link
           to="/rewards"
           className={`text-sm font-mono text-white hover:text-primary transition-colors ${
             location.pathname === "/rewards" ? "border-b-2 border-primary" : ""
@@ -182,6 +190,15 @@ const Header: React.FC = () => {
             onClick={() => setMobileMenuOpen(false)}
           >
             HOME
+          </Link>
+          <Link
+            to="/explorer"
+            className={`block py-2 text-sm font-mono text-white hover:text-primary transition-colors ${
+              location.pathname === "/explorer" ? "text-primary" : ""
+            }`}
+            onClick={() => setMobileMenuOpen(false)}
+          >
+            EXPLORE_NFTs
           </Link>
           <Link
             to="/rewards"

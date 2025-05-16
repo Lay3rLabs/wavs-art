@@ -7,6 +7,8 @@ import DebugInfo from "./components/DebugInfo";
 import { MintProvider } from "./contexts/MintContext";
 import { addLocalNetwork } from "./utils/addLocalNetwork";
 import RewardsPage from "./components/RewardsPage";
+import NFTExplorer from "./components/NFTExplorer";
+import { NFTExplorerProvider } from './contexts/NFTExplorerContext';
 
 const MatrixRain: React.FC = () => {
   const [columns, setColumns] = useState<number[]>([]);
@@ -218,37 +220,40 @@ const App: React.FC = () => {
   }
 
   return (
-    <MintProvider>
-      <div className="min-h-screen flex flex-col relative">
-        {/* Matrix-like animation background */}
-        <MatrixRain />
+      <MintProvider>
+        <NFTExplorerProvider>
+          <div className="min-h-screen flex flex-col relative">
+            {/* Matrix-like animation background */}
+            <MatrixRain />
 
-        {/* Scan line effect */}
-        <div className="fixed inset-0 pointer-events-none z-20">
-          <div className="absolute top-0 left-0 w-full h-screen overflow-hidden opacity-5">
-            <div
-              className="w-full h-screen"
-              style={{
-                backgroundImage:
-                  "repeating-linear-gradient(0deg, transparent, transparent 1px, rgba(0, 255, 65, 0.1) 1px, rgba(0, 255, 65, 0.1) 2px)",
-                backgroundSize: "100% 2px",
-              }}
-            ></div>
+            {/* Scan line effect */}
+            <div className="fixed inset-0 pointer-events-none z-20">
+              <div className="absolute top-0 left-0 w-full h-screen overflow-hidden opacity-5">
+                <div
+                  className="w-full h-screen"
+                  style={{
+                    backgroundImage:
+                      "repeating-linear-gradient(0deg, transparent, transparent 1px, rgba(0, 255, 65, 0.1) 1px, rgba(0, 255, 65, 0.1) 2px)",
+                    backgroundSize: "100% 2px",
+                  }}
+                ></div>
+              </div>
+            </div>
+            
+            {/* Debug Panel (toggle with Ctrl+Shift+D) */}
+            <DebugInfo />
+
+            <Header />
+
+            <Routes>
+              <Route path="/" element={<HomePage />} />
+              <Route path="/explorer" element={<NFTExplorer />} />
+              <Route path="/rewards" element={<RewardsPage />} />
+              <Route path="/nft/:tokenId" element={<NFTDetailPage />} />
+            </Routes>
           </div>
-        </div>
-        
-        {/* Debug Panel (toggle with Ctrl+Shift+D) */}
-        <DebugInfo />
-
-        <Header />
-
-        <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/rewards" element={<RewardsPage />} />
-          <Route path="/nft/:tokenId" element={<NFTDetailPage />} />
-        </Routes>
-      </div>
-    </MintProvider>
+        </NFTExplorerProvider>
+      </MintProvider>
   );
 };
 

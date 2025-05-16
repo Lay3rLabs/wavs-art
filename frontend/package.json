@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "npm run load-env && vite",
+    "dev:holesky": "cp .env.holesky .env.local && vite --mode holesky",
     "build": "npm run load-env && tsc && vite build",
     "preview": "vite preview",
     "load-env": "node load-env.js"
