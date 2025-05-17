@@ -11,8 +11,6 @@ const NFTExplorer: React.FC = () => {
   // Set up the intersection observer for infinite scroll
   const lastNftElementRef = useCallback(
     (node: HTMLDivElement | null) => {
-      if (loading) return;
-
       // Always disconnect the previous observer before creating a new one
       if (observer.current) {
         observer.current.disconnect();
@@ -45,12 +43,6 @@ const NFTExplorer: React.FC = () => {
     if (nfts.length === 0) {
       loadNFTs();
     }
-
-    return () => {
-      if (observer.current) {
-        observer.current.disconnect();
-      }
-    };
   }, [loadNFTs, nfts.length]);
 
   // Network metrics for cyberpunk UI
