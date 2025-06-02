@@ -1,9 +1,9 @@
 @openzeppelin-contracts=node_modules/@openzeppelin/contracts/
 @openzeppelin/=node_modules/@openzeppelin/
-forge-std=node_modules/forge-std/src
 @wavs=node_modules/@wavs/solidity/contracts
+forge-std=node_modules/forge-std/src
+@morpho-org/universal-rewards-distributor=node_modules/@morpho-org/universal-rewards-distributor/src
+
 contracts/=src/contracts
 common/=src/common
 interfaces/=src/interfaces
-
-@morpho-org/universal-rewards-distributor=node_modules/@morpho-org/universal-rewards-distributor/src

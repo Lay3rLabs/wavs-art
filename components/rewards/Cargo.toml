@@ -27,7 +27,7 @@ multihash = { workspace = true }
 bs58 = { workspace = true }
 
 ## Other
-async-trait = "0.1.88"
+async-trait = { workspace = true }
 merkle-tree-rs = "0.1.0"
 
 [lib]
@@ -42,4 +42,4 @@ lto = true
 
 [package.metadata.component]
 package = "component:rewards"
-target = "wavs:worker/layer-trigger-world@0.4.0-beta.2"
+target = "wavs:worker/layer-trigger-world@0.4.0-beta.4"

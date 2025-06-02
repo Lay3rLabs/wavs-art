@@ -1,19 +1,33 @@
-# from wavs-foundry-template
+# general compile
 /target
 out/
 cache/
 broadcast/
+node_modules/
+
+# WAVS
+.env
+.env-e
 compiled/*.wasm
 .docker/*.json
 .docker/*.log
-.env
-.env-e
-node_modules/
-lcov.info
-internal/
 wavs:worker*.wit
 wavs:worker*.wasm
-.nodes
 
+# WAVS infra
+.nodes
+infra/*
+
+# Tools
+**/.claude/settings.local.json
+
+# Frontend
+node_modules/
+.next/
+.env.local
+
+# AI Data
 .docker/data_*
+
+# Misc
 .DS_Store

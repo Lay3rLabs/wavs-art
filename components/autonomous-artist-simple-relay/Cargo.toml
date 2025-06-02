@@ -35,4 +35,4 @@ lto = true
 
 [package.metadata.component]
 package = "component:autonomous-artist-simple-relay"
-target = "wavs:worker/layer-trigger-world@0.4.0-beta.2"
+target = "wavs:worker/layer-trigger-world@0.4.0-beta.4"
