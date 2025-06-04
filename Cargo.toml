@@ -16,7 +16,7 @@ wit-bindgen-rt = { version = "0.42.1", features = ["bitflags"] }
 wit-bindgen = "0.42.1"
 wstd = "0.5.3"
 wasi = "0.14.1"
-wavs-wasi-utils = "=0.4.0-beta.2"
+wavs-wasi-utils = "0.4.0-beta.4"
 
 # Other
 serde = { version = "1.0.219", features = ["derive"] }
@@ -41,4 +41,4 @@ multihash = "0.18"
 bs58 = "0.5"       # For decoding v0 CIDs
 
 # TODO these are under active development, replace with `wavs-tools` repo when done
-wavs-llm = { git = "https://github.com/Lay3rLabs/wavs-safe", branch = "wit-refactor-0.4.0" }
+wavs-llm = { git = "https://github.com/Lay3rLabs/wavs-safe", tag = "v0.4.0-rc.1" }
