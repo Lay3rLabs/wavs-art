@@ -3,17 +3,20 @@ import WAVS_NFT_ABI from "@/abis/WavsNft.json";
 import WAVS_MINTER_ABI from "../abis/WavsMinter.json";
 import REWARD_DISTRIBUTOR_ABI from "@/abis/RewardDistributor.json";
 import ERC20_ABI from "@/abis/ERC20.json";
-import { getNetwork, getWalletClient } from "wagmi/actions";
+import { getWalletClient } from "wagmi/actions";
+import { getAccount } from "@wagmi/core";
 import {
   NFT_CONTRACT_ADDRESS,
   MINTER_CONTRACT_ADDRESS,
   REWARD_DISTRIBUTOR_ADDRESS,
   REWARD_TOKEN_ADDRESS,
+  IS_LOCALHOST,
 } from "@/constants";
-import { chains } from "./config";
+import { chains, HOLESKY_RPC_URL } from "./config";
+import { wagmiConfig } from "./config";
 
 export const getBrowserProviderWalletSigner = async () => {
-  const walletClient = await getWalletClient();
+  const walletClient = await getWalletClient(wagmiConfig);
   if (!walletClient) {
     throw new Error("No wallet client found");
   }
@@ -60,11 +63,11 @@ export const getNftContract = (
 };
 
 export const getProvider = () => {
-  const chain = getNetwork()?.chain || chains[0];
-  let rpcUrl = chain.rpcUrls.default.http[0];
+  const chain = getAccount(wagmiConfig)?.chain || chains[0];
+  let rpcUrl = (IS_LOCALHOST ? "http://127.0.0.1:8545" : HOLESKY_RPC_URL) || chain.rpcUrls.default.http[0];
   if (!rpcUrl) {
     console.error("No RPC URL found", chain);
-    rpcUrl = "http://localhost:8545";
+    rpcUrl = "http://127.0.0.1:8545";
   }
   return new ethers.JsonRpcProvider(rpcUrl);
 };
